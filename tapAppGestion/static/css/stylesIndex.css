@@ -1,0 +1,230 @@
+/* --- RESET BÁSICO --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    color: #333;
+  }
+  
+  /* --- ENCABEZADO / NAVBAR --- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+    border-bottom: 2px solid #ccc;
+  }
+  
+  /* Contenedor del icono de usuario + título */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+  }
+  
+  /* Círculo con la inicial del usuario */
+  .user-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #ffcd00; /* color dorado/amarillo */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #333;
+    box-shadow: 0 0 0 2px #000 inset; /* Para simular borde negro estilo boceto */
+  }
+  
+  /* Título a la derecha del icono */
+  h1 {
+    font-size: 1.2rem;
+    font-weight: normal;
+  }
+  
+  /* Contenedor de los botones */
+  nav {
+    display: flex;
+    gap: 0.5em;
+  }
+  
+  nav button {
+    background-color: #8ae650; /* verde claro */
+    border: 2px solid #000;    /* borde negro estilo boceto */
+    color: #000;
+    font-weight: bold;
+    padding: 0.8em 1em;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  nav button:hover {
+    background-color: #a2f070;
+  }
+
+    /* Estilo específico para el botón de cerrar sesión */
+  .logout-button {
+    background-color: #ff4d4d; /* rojo claro */
+    margin-left: 5em; /* Separación adicional */
+  }
+
+  nav .logout-button:hover {
+    background-color: #ff6666; /* rojo más claro */
+  }
+  
+  /* --- CONTENIDO PRINCIPAL --- */
+  main {
+    position: relative;
+    padding: 2em;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .main-image {
+    max-width: 1000px;
+    margin: 2em 0;
+    border: 2px solid #000; /* borde estilo boceto */
+  }
+  
+  /* Botón flotante con el + en la esquina inferior derecha */
+  .floating-btn {
+    position: fixed;
+    bottom: 2em;
+    right: 2em;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 0 #000;
+  }
+  
+  .floating-btn:hover {
+    background-color: #f8f8f8;
+  }
+
+  .profile-box {
+    margin-top: 2em;
+    padding: 1em;
+    width: 300px;           /* Ajusta a tu gusto */
+    border: 2px solid #000; /* Borde negro estilo boceto */
+    background-color: #fff; 
+    box-shadow: 2px 2px 0 0 #000; /* Efecto "boceto" en la caja */
+  }
+  .profile-box p {
+    margin-bottom: 1em;
+  }
+  
+  /* Pequeño ajuste para estilo "boceto" en general */
+  /* Opcional: fuente "Comic Sans" para simular un boceto más marcado */
+  /* body { font-family: "Comic Sans MS", sans-serif; } */
+
+  /* --- ESTILOS PARA EL FORMULARIO DE LOGIN --- */
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-top: 2em;
+  }
+
+  .login-form label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+  }
+
+  .login-form input {
+    padding: 0.5em;
+    border: 2px solid #000;
+    border-radius: 4px;
+  }
+
+  .login-form button {
+    background-color: #8ae650; /* verde claro */
+    border: 2px solid #000;    /* borde negro estilo boceto */
+    color: #000;
+    font-weight: bold;
+    padding: 0.5em 1em;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .login-form button:hover {
+    background-color: #a2f070;
+  }
+
+  /* Imagen de fondo ocupando toda la pantalla */
+  .background-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 97vw;
+    height: 90vh;
+    background-image: url("../images/logo_blanco.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+  }
+  
+  .login-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 300px;
+    color: white;
+  }
+
+  /* Estilo del enlace de registro */
+  .register-link {
+    margin-top: 10px;
+    font-size: 14px;
+    color: white;
+  }
+
+  .register-link a {
+    color: #33ff00;
+    text-decoration: none;
+    font-weight: bold;
+  }
+
+  .register-link a:hover {
+    text-decoration: underline;
+  }
+
+  /* Contenedor del perfil */
+  .profile-container {
+    background: rgba(0, 0, 0, 0.7); /* Fondo semi-transparente */
+    padding: 50px;
+    border-radius: 25px;
+    text-align: center;
+    width: 500px;
+    color: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+
+  
+

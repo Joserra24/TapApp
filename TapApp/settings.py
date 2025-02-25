@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'tapAppGestion',  # Add this line to the list of installed apps
 ]
 
 MIDDLEWARE = [
@@ -120,4 +121,12 @@ STATIC_URL = 'static/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
+# Añadir esta línea para definir el directorio donde se almacenan los archivos estáticos
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+

@@ -15,10 +15,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from TapApp import views    
+from django.urls import path, include
+from tapAppGestion import views
+from django.urls import reverse_lazy
+from django.contrib.auth.views import LogoutView
+
+
 
 urlpatterns = [
-    path('hola/', views.index),
     path('admin/', admin.site.urls),
+    path('', views.index, name='index'),
+    path("profile/", views.profile_view, name="profile"),
+    path("register/", views.formulario_registro, name="register"),
+    path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),
+    path('agregar_producto/', views.agregar_producto, name='agregar_producto'),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('salir/', views.salir, name='salir'),
 ]
+
+LOGIN_REDIRECT_URL = reverse_lazy("profile")
+

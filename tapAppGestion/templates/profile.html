@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Discovering Tentudia</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesIndex.css' %}">
+</head>
+<body>
+
+    <!-- Imagen de fondo -->
+    <div class="background-image"></div>
+
+    <!-- Contenedor del perfil -->
+    <div class="profile-container">
+        <h2>Bienvenido, {{ user.first_name }} {{ user.last_name }}</h2>
+        <p><strong>Usuario:</strong> {{ user.username }}</p>
+        <p><strong>Correo:</strong> {{ user.email }}</p>
+    </div>
+
+</body>
+</html>
