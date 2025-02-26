@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 
 from django.http import HttpResponse
-from .forms import ProductoForm, RegistroForm
+from .forms import ProductoForm, RegistroForm, EditProfileForm
 
 @login_required
 def index(request):
@@ -45,6 +45,18 @@ def profile_view(request):
 def personal(request):
     usuarios = User.objects.all()
     return render(request, 'personal.html', {'usuarios': usuarios})
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Tu perfil ha sido actualizado.')
+            return redirect('profile')
+    else:
+        form = EditProfileForm(instance=request.user)
+    return render(request, 'edit_profile.html', {'form': form})
 
 
 

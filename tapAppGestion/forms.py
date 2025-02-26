@@ -45,5 +45,11 @@ class RegistroForm(UserCreationForm):
             user.save()
         return user
 
+class EditProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        help_texts = {"username": None,}
+        
         
 

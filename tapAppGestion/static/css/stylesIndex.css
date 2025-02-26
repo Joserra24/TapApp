@@ -231,6 +231,29 @@
     margin-right: 10px; /* Espacio entre el logo y el texto */
   }
 
+  .btn-lila {
+    display: inline-block;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    background-color: #9370DB; 
+    color: black;
+    border: 2px solid black;
+    border-radius: 8px;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+}
+
+  .btn-lila:hover {
+      background-color: #7A5DC7; 
+      transform: scale(1.05); 
+  }
+
+  .btn-lila:active {
+      transform: scale(0.95);
+  }
+
 
   
 
