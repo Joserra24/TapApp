@@ -31,6 +31,8 @@ urlpatterns = [
     path('agregar_producto/', views.agregar_producto, name='agregar_producto'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('salir/', views.salir, name='salir'),
+    path('personal/', views.personal, name='personal'),
+
 ]
 
 LOGIN_REDIRECT_URL = reverse_lazy("profile")

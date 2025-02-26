@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages  
+from django.contrib.auth.models import User
 
 
 from django.http import HttpResponse
@@ -16,11 +17,10 @@ def agregar_producto(request):
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('index')  # Redirige a la página de inicio después de guardar
+            return redirect('index')
     else:
         form = ProductoForm()
     return render(request, 'agregar_producto.html', {'form': form})
-
 
 def salir(request):
     logout(request)
@@ -41,6 +41,10 @@ def formulario_registro(request):
 @login_required
 def profile_view(request):
     return render(request, "profile.html", {"user": request.user})
+
+def personal(request):
+    usuarios = User.objects.all()
+    return render(request, 'personal.html', {'usuarios': usuarios})
 
 
 
