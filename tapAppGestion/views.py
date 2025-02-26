@@ -7,6 +7,10 @@ from django.contrib import messages
 from django.http import HttpResponse
 from .forms import ProductoForm, RegistroForm
 
+@login_required
+def index(request):
+    return render(request, 'index.html')
+
 def agregar_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
@@ -17,9 +21,6 @@ def agregar_producto(request):
         form = ProductoForm()
     return render(request, 'agregar_producto.html', {'form': form})
 
-@login_required
-def index(request):
-    return render(request, 'index.html')
 
 def salir(request):
     logout(request)

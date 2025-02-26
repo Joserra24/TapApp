@@ -1,45 +1,13 @@
+{% extends 'base.html' %}
+
 {% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <title>Discovering Tentudia - TapApp</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesIndex.css' %}">
-</head>
-<body>
 
-  <!-- Encabezado -->
-  <header>
-    <div class="header-left">
-      <!-- Enlace al perfil del usuario -->
-      <a href="{% url 'profile' %}" style="text-decoration: none;"></a>
-        <div class="user-circle">{{ user.first_name|slice:":1" }}</div>
-      </a>
-      <h1>Discovering Tentudia</h1>
-    </div>
+{% block title %}Inicio - Discovering Tentudia{% endblock %}
 
-    <nav>
-      <button>Pedidos</button>
-      <button>Menú</button>
-      <button>Personal</button>
-      <a href="{% url 'profile' %}">
-        <button>Perfil</button>
-      </a>
-      <a href="{% url 'salir' %}">
-        <button class="logout-button">Cerrar sesión</button>
-      </a>
-
-    </nav>
-  </header>
-
-  <!-- Contenido principal -->
-  <main>
+{% block content %}
     <!-- Imagen principal (logo + fondo verde) -->
     <img src="{% static 'images/logo_blanco.jpeg' %}" alt="Discovering Tentudia" class="main-image" />
 
     <!-- Botón flotante con el símbolo + -->
     <div class="floating-btn">+</div>
-  </main>
-
-</body>
-</html>
+{% endblock %}

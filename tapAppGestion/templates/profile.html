@@ -1,16 +1,13 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfil - Discovering Tentudia</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesIndex.css' %}">
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <!-- Imagen de fondo -->
-    <div class="background-image"></div>
+{% load static %}
+
+{% block title %}Perfil - Discovering Tentudia{% endblock %}
+
+{% block content %}
+
+    <!-- Imagen principal (logo + fondo verde) -->
+    <img src="{% static 'images/logo_blanco.jpeg' %}" alt="Discovering Tentudia" class="main-image" />
 
     <!-- Contenedor del perfil -->
     <div class="profile-container">
@@ -19,5 +16,4 @@
         <p><strong>Correo:</strong> {{ user.email }}</p>
     </div>
 
-</body>
-</html>
+{% endblock %}

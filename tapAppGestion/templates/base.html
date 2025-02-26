@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Discovering Tentudia - TapApp{% endblock %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesIndex.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    <style>
+        header {
+            background-color: #9cc276; /* Verde clarito */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <header>
+        <div class="header-left">
+            <a href="{% url 'index' %}">
+                <img src="{% static 'images/logo_blanco.jpeg' %}" alt="Logo Discovering Tentudia" class="logo">
+            </a>
+            <a href="{% url 'profile' %}" style="text-decoration: none;">
+                <div class="user-circle">{{ user.first_name|slice:":1" }}</div>
+            </a>
+            <h1>Discovering Tentudia</h1>
+        </div>
+
+        <nav>
+            <button>Pedidos</button>
+            <button>Menú</button>
+            <button>Personal</button>
+            <a href="{% url 'profile' %}">
+                <button>Perfil</button>
+            </a>
+            <a href="{% url 'salir' %}">
+                <button class="logout-button">Cerrar sesión</button>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Contenido dinámico de cada página -->
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Pie de página -->
+    <footer>
+        <p>&copy; 2025 Discovering Tentudia.</p>
+    </footer>
+
+</body>
+</html>
