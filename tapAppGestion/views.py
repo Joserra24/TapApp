@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages  
@@ -57,6 +57,16 @@ def edit_profile(request):
     else:
         form = EditProfileForm(instance=request.user)
     return render(request, 'edit_profile.html', {'form': form})
+
+@login_required
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, 'El usuario ha sido eliminado.')
+        return redirect('personal')
+    return render(request, 'confirm_delete.html', {'user': user})
+
 
 
 

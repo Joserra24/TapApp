@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmar Eliminación</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Confirmar Eliminación</h1>
+  </header>
+
+  <main class="delete-container">
+    <p>¿Estás seguro de que deseas eliminar al usuario <strong>{{ user.username }}</strong>?</p>
+    
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn-delete">Sí, eliminar</button>
+      <a href="{% url 'personal' %}" class="btn-cancel">Cancelar</a>
+    </form>
+  </main>
+
+</body>
+</html>

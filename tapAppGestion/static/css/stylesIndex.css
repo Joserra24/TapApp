@@ -254,6 +254,34 @@
       transform: scale(0.95);
   }
 
+  .btn-red {
+    background-color: #d9534f; /* Rojo fuerte */
+    color: black; /* Texto blanco */
+    border: none;
+    font-weight: bold;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 2px solid black;
+    font-size: 16px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+  .btn-red:hover {
+      background-color: #c9302c; /* Rojo más oscuro al pasar el mouse */
+  }
+
+  .profile-buttons {
+    display: flex;  /* Usa flexbox para alinear los elementos en fila */
+    gap: 10px;      /* Espacio entre los botones */
+    align-items: center; /* Alinea los botones verticalmente */
+}
+
+  .delete-profile-button {
+      order: 1;  /* Hace que este botón aparezca primero */
+  }
+
 
   
 

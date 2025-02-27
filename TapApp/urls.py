@@ -33,7 +33,7 @@ urlpatterns = [
     path('salir/', views.salir, name='salir'),
     path('personal/', views.personal, name='personal'),
     path('editar_perfil/', views.edit_profile, name='editar_perfil'),
-
+    path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
 
 ]
 

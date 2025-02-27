@@ -16,9 +16,20 @@
         <p><strong>Correo:</strong> {{ user.email }}</p>
     </div>
 
-<!-- Botón de editar perfil -->
-<div class="edit-profile-button">
-    <a href="{% url 'editar_perfil' %}" class="btn-lila">Editar Perfil</a>
+<!-- Contenedor de botones -->
+<div class="profile-buttons">
+    <!-- Botón de eliminar perfil -->
+    <div class="delete-profile-button">
+        <form action="{% url 'delete_user' user.id %}" method="post">
+            {% csrf_token %}
+            <a href="{% url 'delete_user' user.id %}" class="btn-red">Eliminar</a>
+        </form>
+    </div>
+
+    <!-- Botón de editar perfil -->
+    <div class="edit-profile-button">
+        <a href="{% url 'editar_perfil' %}" class="btn-lila">Editar Perfil</a>
+    </div>
 </div>
 
 {% endblock %}
