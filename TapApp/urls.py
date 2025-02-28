@@ -38,6 +38,8 @@ urlpatterns = [
     path('producto/<int:producto_id>/', views.producto_detalle, name='producto_detalle'),
     path('producto/<int:producto_id>/editar/', views.editar_producto, name='editar_producto'),
     path('producto/<int:producto_id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
+    path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
+
 ]
 
 LOGIN_REDIRECT_URL = reverse_lazy("profile")

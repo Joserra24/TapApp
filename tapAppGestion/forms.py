@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import Producto
+from .models import Producto, Pedido
 
 class ProductoForm(forms.ModelForm):
     class Meta:
@@ -81,6 +81,28 @@ class EditProfileForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+class PedidoForm(forms.ModelForm):
+    productos = forms.ModelMultipleChoiceField(
+        queryset=Producto.objects.all().order_by('categoria'),
+        widget=forms.CheckboxSelectMultiple,
+        required=True
+    )
+
+    class Meta:
+        model = Pedido
+        fields = ['productos']
+
+    def __init__(self, *args, **kwargs):
+        super(PedidoForm, self).__init__(*args, **kwargs)
+        self.fields['productos'].queryset = Producto.objects.all().order_by('categoria')
+        for producto in self.fields['productos'].queryset:
+            self.fields[f'cantidad_{producto.id}'] = forms.IntegerField(
+                label=f'Cantidad de {producto.nombre}',
+                min_value=1,
+                initial=1,
+                required=False
+            )
         
         
 

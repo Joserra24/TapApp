@@ -1,0 +1,180 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Crear Pedido</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesCrearPedido.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Crear Pedido</h1>
+  </header>
+  <nav>
+    <ul class="navbar">
+      {% for categoria in categorias %}
+        <li class="{% if categoria == categoria_seleccionada %}active{% endif %}">
+          <a href="?categoria={{ categoria }}">{{ categoria }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </nav>
+  <main>
+    <div class="content">
+      <div class="productos">
+        <form id="pedido-form" method="post">
+          {% csrf_token %}
+          {% if productos %}
+            <fieldset>
+              <legend>{{ categoria_seleccionada }}</legend>
+              <div class="productos-grid">
+                {% for producto in productos %}
+                  <div class="producto">
+                    <label for="id_productos_{{ producto.id }}">
+                      {{ producto.nombre }} - {{ producto.precio }}€
+                    </label>
+                    <div class="cantidad">
+                      <button type="button" class="btn-minus" onclick="decrementarCantidad({{ producto.id }})">-</button>
+                      <input type="number" name="cantidad_{{ producto.id }}" id="id_cantidad_{{ producto.id }}" min="0" value="0" readonly>
+                      <button type="button" class="btn-plus" onclick="incrementarCantidad({{ producto.id }})">+</button>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </fieldset>
+          {% else %}
+            <p>Seleccione una categoría para ver los productos.</p>
+          {% endif %}
+        </form>
+      </div>
+      <div class="resumen">
+        <h2>Resumen del Pedido</h2>
+        <form id="resumen-form">
+          <label for="mesa">Nombre de la Mesa:</label>
+          <input type="text" id="mesa" name="mesa" required>
+          <label for="comensales">Número de Comensales:</label>
+          <input type="number" id="comensales" name="comensales" min="1" required>
+          <ul id="resumen-pedido">
+            <!-- Aquí se mostrarán los productos añadidos al pedido -->
+          </ul>
+          <p id="total-pedido">Total: 0.00€</p>
+          <button type="submit" form="pedido-form">Crear Pedido</button>
+        </form>
+      </div>
+    </div>
+  </main>
+  <script>
+    const resumenPedido = JSON.parse(localStorage.getItem('resumenPedido')) || {};
+
+    function incrementarCantidad(productoId) {
+      const input = document.getElementById('id_cantidad_' + productoId);
+      input.value = parseInt(input.value) + 1;
+      actualizarResumen(productoId);
+    }
+
+    function decrementarCantidad(productoId) {
+      const input = document.getElementById('id_cantidad_' + productoId);
+      if (parseInt(input.value) > 0) {
+        input.value = parseInt(input.value) - 1;
+        actualizarResumen(productoId);
+      }
+    }
+
+    function actualizarResumen(productoId) {
+      const input = document.getElementById('id_cantidad_' + productoId);
+      const cantidad = input ? parseInt(input.value) : resumenPedido[productoId].cantidad;
+      const nombreProducto = document.querySelector('label[for="id_productos_' + productoId + '"]') ? document.querySelector('label[for="id_productos_' + productoId + '"]').innerText.split(' - ')[0] : resumenPedido[productoId].nombre;
+      const precioProducto = document.querySelector('label[for="id_productos_' + productoId + '"]') ? parseFloat(document.querySelector('label[for="id_productos_' + productoId + '"]').innerText.split(' - ')[1].replace('€', '')) : resumenPedido[productoId].precio;
+      const resumen = document.getElementById('resumen-pedido');
+      let item = document.getElementById('resumen-item-' + productoId);
+
+      if (cantidad > 0) {
+        resumenPedido[productoId] = { nombre: nombreProducto, cantidad: cantidad, precio: precioProducto };
+        if (!item) {
+          item = document.createElement('li');
+          item.id = 'resumen-item-' + productoId;
+          item.innerHTML = `${nombreProducto}: ${cantidad} x ${precioProducto.toFixed(2)}€ = ${(cantidad * precioProducto).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
+          resumen.appendChild(item);
+        } else {
+          item.innerHTML = `${nombreProducto}: ${cantidad} x ${precioProducto.toFixed(2)}€ = ${(cantidad * precioProducto).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
+        }
+      } else {
+        delete resumenPedido[productoId];
+        if (item) {
+          resumen.removeChild(item);
+        }
+      }
+
+      localStorage.setItem('resumenPedido', JSON.stringify(resumenPedido));
+      actualizarTotal();
+    }
+
+    function incrementarCantidadResumen(productoId) {
+      if (document.getElementById('id_cantidad_' + productoId)) {
+        const input = document.getElementById('id_cantidad_' + productoId);
+        input.value = parseInt(input.value) + 1;
+      } else {
+        resumenPedido[productoId].cantidad += 1;
+      }
+      actualizarResumen(productoId);
+    }
+
+    function decrementarCantidadResumen(productoId) {
+      if (document.getElementById('id_cantidad_' + productoId)) {
+        const input = document.getElementById('id_cantidad_' + productoId);
+        if (parseInt(input.value) > 0) {
+          input.value = parseInt(input.value) - 1;
+        }
+      } else {
+        if (resumenPedido[productoId].cantidad > 0) {
+          resumenPedido[productoId].cantidad -= 1;
+        }
+      }
+      actualizarResumen(productoId);
+    }
+
+    function actualizarTotal() {
+      let total = 0;
+      for (const productoId in resumenPedido) {
+        total += resumenPedido[productoId].cantidad * resumenPedido[productoId].precio;
+      }
+      document.getElementById('total-pedido').innerText = `Total: ${total.toFixed(2)}€`;
+    }
+
+    function cargarResumen() {
+      const resumen = document.getElementById('resumen-pedido');
+      for (const productoId in resumenPedido) {
+        const item = document.createElement('li');
+        item.id = 'resumen-item-' + productoId;
+        item.innerHTML = `${resumenPedido[productoId].nombre}: ${resumenPedido[productoId].cantidad} x ${resumenPedido[productoId].precio.toFixed(2)}€ = ${(resumenPedido[productoId].cantidad * resumenPedido[productoId].precio).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
+        resumen.appendChild(item);
+      }
+      actualizarTotal();
+    }
+
+    document.getElementById('pedido-form').addEventListener('submit', function(event) {
+      for (const productoId in resumenPedido) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'cantidad_' + productoId;
+        input.value = resumenPedido[productoId].cantidad;
+        this.appendChild(input);
+      }
+      const mesaInput = document.createElement('input');
+      mesaInput.type = 'hidden';
+      mesaInput.name = 'mesa';
+      mesaInput.value = document.getElementById('mesa').value;
+      this.appendChild(mesaInput);
+
+      const comensalesInput = document.createElement('input');
+      comensalesInput.type = 'hidden';
+      comensalesInput.name = 'comensales';
+      comensalesInput.value = document.getElementById('comensales').value;
+      this.appendChild(comensalesInput);
+    });
+
+    window.onload = cargarResumen;
+  </script>
+</body>
+</html>

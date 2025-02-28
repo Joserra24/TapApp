@@ -7,8 +7,8 @@ from django.contrib.auth.models import User
 
 
 from django.http import HttpResponse
-from .forms import ProductoForm, RegistroForm, EditProfileForm
-from .models import Producto
+from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm
+from .models import Producto, Pedido
 
 
 @login_required
@@ -115,8 +115,43 @@ def eliminar_producto(request, producto_id):
         return redirect('menu')
     return render(request, 'confirmacion_eliminar_producto.html', {'producto': producto})
 
+@login_required
+def crear_pedido(request):
+    categoria_seleccionada = request.GET.get('categoria', None)
+    if request.method == 'POST':
+        form = PedidoForm(request.POST)
+        if form.is_valid():
+            pedido = form.save(commit=False)
+            pedido.usuario = request.user
+            pedido.save()
+            form.save_m2m()  # Guardar la relación many-to-many
 
+            # Guardar las cantidades de los productos
+            for producto in form.cleaned_data['productos']:
+                cantidad = form.cleaned_data.get(f'cantidad_{producto.id}', 1)
+                pedido.productos.add(producto, through_defaults={'cantidad': cantidad})
 
+            messages.success(request, 'El pedido ha sido creado.')
+            return redirect('index')
+    else:
+        form = PedidoForm()
+    
+    productos_por_categoria = {}
+    for producto in Producto.objects.all().order_by('categoria'):
+        if producto.categoria not in productos_por_categoria:
+            productos_por_categoria[producto.categoria] = []
+        productos_por_categoria[producto.categoria].append(producto)
+    
+    categorias = list(productos_por_categoria.keys())
+    productos = productos_por_categoria.get(categoria_seleccionada, []) if categoria_seleccionada else []
+
+    return render(request, 'crear_pedido.html', {
+        'form': form,
+        'productos_por_categoria': productos_por_categoria,
+        'categorias': categorias,
+        'productos': productos,
+        'categoria_seleccionada': categoria_seleccionada
+    })
 
 
 
