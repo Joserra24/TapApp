@@ -28,7 +28,9 @@
 
         <nav>
             <button>Pedidos</button>
-            <button>Menú</button>
+            <a href="{% url 'menu' %}">
+                <button>Menú</button>
+            </a>
             <a href="{% url 'personal' %}">
             <button>Personal</button>
             </a>

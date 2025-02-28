@@ -8,6 +8,8 @@ from django.contrib.auth.models import User
 
 from django.http import HttpResponse
 from .forms import ProductoForm, RegistroForm, EditProfileForm
+from .models import Producto
+
 
 @login_required
 def index(request):
@@ -18,7 +20,7 @@ def agregar_producto(request):
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('index')
+            return redirect('menu')
     else:
         form = ProductoForm()
     return render(request, 'agregar_producto.html', {'form': form})
@@ -75,6 +77,16 @@ def delete_user(request, user_id):
         messages.success(request, 'El usuario ha sido eliminado.')
         return redirect('personal')
     return render(request, 'confirm_delete.html', {'user': user})
+
+@login_required
+def menu(request):
+    productos = Producto.objects.all().order_by('categoria')
+    categorias = {}
+    for producto in productos:
+        if producto.categoria not in categorias:
+            categorias[producto.categoria] = []
+        categorias[producto.categoria].append(producto)
+    return render(request, 'menu.html', {'categorias': categorias})
 
 
 

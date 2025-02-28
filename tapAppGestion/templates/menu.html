@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+
+{% load static %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Menú</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesMenu.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Menú</h1>
+    <!-- Botón de agregar producto -->
+    <a href="{% url 'agregar_producto' %}" class="btn-agregar">Agregar Producto</a>
+  </header>
+  <main>
+    {% for categoria, productos in categorias.items %}
+      <h2>{{ categoria }}</h2>
+      <ul>
+        {% for producto in productos %}
+          <li>
+            <h3>{{ producto.nombre }}</h3>
+            <p>{{ producto.descripcion }}</p>
+            <p><strong>Precio:</strong> {{ producto.precio }}</p>
+            {% if producto.imagen %}
+              <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endfor %}
+  </main>
+</body>
+</html>
+{% endblock %}

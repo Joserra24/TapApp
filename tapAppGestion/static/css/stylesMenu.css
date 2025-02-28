@@ -1,0 +1,84 @@
+/* Estilo general */
+body {
+    font-family: Arial, sans-serif;
+    background-color: white;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+.btn-agregar {
+    background-color: #6CAF50; /* Verde */
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 5px;
+    border: 3px solid black;
+    position: absolute;
+    left: 20px; /* Lo mueve a la izquierda */
+    top: 20px; /* Ajusta la altura desde arriba */
+}
+
+.btn-agregar:hover {
+    background-color: #5a9e40;
+}
+
+/* Contenedor del menú */
+main {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Categorías del menú */
+h2 {
+    background-color: #3D6D35; /* Verde oscuro */
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: 3px solid black;
+    display: inline-block;
+    margin: 15px auto;
+}
+
+/* Lista de productos */
+ul {
+    list-style-type: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+li {
+    background-color: white;
+    padding: 10px;
+    margin: 10px;
+    border: 3px solid black;
+    width: 180px;
+    text-align: center;
+    box-shadow: 3px 3px 0px black;
+}
+
+li h3 {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 5px 0;
+}
+
+li p {
+    font-size: 14px;
+    margin: 5px 0;
+}
+
+/* Imagen del producto */
+li img {
+    max-width: 80px;
+    height: auto;
+    border: 2px solid black;
+    display: block;
+    margin: 5px auto;
+}
+

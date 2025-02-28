@@ -19,6 +19,12 @@
     padding: 1em;
     border-bottom: 2px solid #ccc;
   }
+
+  header h1 {
+    font-weight: bold; /* Aplica negrita */
+    font-size: 24px; /* Ajusta el tamaño */
+    color: black; /* Asegura que sea visible */
+  }
   
   /* Contenedor del icono de usuario + título */
   .header-left {
@@ -281,6 +287,8 @@
   .delete-profile-button {
       order: 1;  /* Hace que este botón aparezca primero */
   }
+
+  
 
 
   
