@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import Producto
 
@@ -46,10 +46,41 @@ class RegistroForm(UserCreationForm):
         return user
 
 class EditProfileForm(forms.ModelForm):
+    password1 = forms.CharField(
+        label="Nueva Contraseña",
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text="",
+        required=False,
+    )
+
+    password2 = forms.CharField(
+        label="Confirmar Contraseña",
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text="",
+        required=False,
+    )
+
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email']
         help_texts = {"username": None,}
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password1 = cleaned_data.get("password1")
+        password2 = cleaned_data.get("password2")
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Las contraseñas no coinciden.")
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password1 = self.cleaned_data.get("password1")
+        if password1:
+            user.set_password(password1)
+        if commit:
+            user.save()
+        return user
         
         
 

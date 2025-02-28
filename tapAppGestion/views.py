@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages  
@@ -51,11 +52,19 @@ def edit_profile(request):
     if request.method == 'POST':
         form = EditProfileForm(request.POST, instance=request.user)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Tu perfil ha sido actualizado.')
-            return redirect('profile')
+            user = form.save()
+            password_changed = bool(form.cleaned_data.get("password1"))
+
+            if password_changed:
+                update_session_auth_hash(request, user)  # Mantiene la sesión activa
+                messages.success(request, "Tu contraseña ha sido actualizada correctamente.")
+            else:
+                messages.success(request, "Tu perfil ha sido actualizado correctamente.")
+
+            return redirect('index')
     else:
         form = EditProfileForm(instance=request.user)
+
     return render(request, 'edit_profile.html', {'form': form})
 
 @login_required
