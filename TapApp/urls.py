@@ -35,8 +35,9 @@ urlpatterns = [
     path('editar_perfil/', views.edit_profile, name='editar_perfil'),
     path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
     path('menu/', views.menu, name='menu'),
-
-
+    path('producto/<int:producto_id>/', views.producto_detalle, name='producto_detalle'),
+    path('producto/<int:producto_id>/editar/', views.editar_producto, name='editar_producto'),
+    path('producto/<int:producto_id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
 ]
 
 LOGIN_REDIRECT_URL = reverse_lazy("profile")

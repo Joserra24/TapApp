@@ -88,6 +88,33 @@ def menu(request):
         categorias[producto.categoria].append(producto)
     return render(request, 'menu.html', {'categorias': categorias})
 
+@login_required
+def producto_detalle(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    return render(request, 'producto_detalle.html', {'producto': producto})
+
+@login_required
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'El producto ha sido actualizado.')
+            return redirect('menu')
+    else:
+        form = ProductoForm(instance=producto)
+    return render(request, 'editar_producto.html', {'form': form, 'producto': producto})
+
+@login_required
+def eliminar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+    if request.method == 'POST':
+        producto.delete()
+        messages.success(request, 'El producto ha sido eliminado.')
+        return redirect('menu')
+    return render(request, 'confirmacion_eliminar_producto.html', {'producto': producto})
+
 
 
 

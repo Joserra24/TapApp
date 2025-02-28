@@ -6,7 +6,7 @@ from .models import Producto
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
-        fields = ['nombre', 'categoria', 'precio', 'imagen']
+        fields = ['nombre', 'categoria', 'precio']
 
 class RegistroForm(UserCreationForm):
     email = forms.EmailField(required=True, label="Correo Electrónico")

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalle del Producto</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesDetalle.css' %}">
+</head>
+<body>
+  <header>
+    <h1>{{ producto.nombre }}</h1>
+  </header>
+  <main>
+    <p>{{ producto.descripcion }}</p>
+    <p><strong>Precio:</strong> {{ producto.precio }}</p>
+    <div class="button-container">
+        <a href="{% url 'editar_producto' producto.id %}" class="btn-lila">Editar Producto</a>
+        <a href="{% url 'eliminar_producto' producto.id %}" class="btn-rojo">Eliminar Producto</a>
+    </div>
+  </main>
+</body>
+</html>
+
+{% endblock %}

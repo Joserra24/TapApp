@@ -1,0 +1,66 @@
+/* Estilos básicos */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+  }
+  
+  header {
+    background-color: #ff4d4d; /* Rojo */
+    color: white;
+    padding: 1em;
+    text-align: center;
+  }
+  
+  main {
+    padding: 2em;
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  h1 {
+    font-size: 2em;
+    margin-bottom: 0.5em;
+  }
+  
+  p {
+    font-size: 1.2em;
+    margin-bottom: 1em;
+  }
+  
+  /* Estilos para los botones */
+  .btn-delete, .btn-cancel {
+    display: inline-block;
+    padding: 0.5em 1em;
+    margin: 0.5em;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 2px solid #000; /* Borde negro estilo boceto */
+    font-size: 1em; /* Asegura que ambos botones tengan el mismo tamaño de letra */
+  }
+  
+  .btn-delete {
+    background-color: #ff4d4d; /* Rojo */
+    color: black;
+  }
+  
+  .btn-delete:hover {
+    background-color: #e60000; /* Rojo más oscuro */
+  }
+  
+  .btn-cancel {
+    background-color: #ccc; /* Gris */
+    color: black;
+  }
+  
+  .btn-cancel:hover {
+    background-color: #999; /* Gris más oscuro */
+  }

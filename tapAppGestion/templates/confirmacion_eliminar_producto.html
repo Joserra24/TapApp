@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Confirmar Eliminación</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesConfirmarEliminar.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Confirmar Eliminación</h1>
+  </header>
+  <main>
+    <p>¿Estás seguro de que deseas eliminar el producto <strong>{{ producto.nombre }}</strong>?</p>
+    <form method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn-delete">Sí, eliminar</button>
+      <a href="{% url 'menu' %}" class="btn-cancel">Cancelar</a>
+    </form>
+  </main>
+</body>
+</html>

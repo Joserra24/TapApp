@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% load static %}
 
 {% block content %}
@@ -24,7 +23,9 @@
       <ul>
         {% for producto in productos %}
           <li>
-            <h3>{{ producto.nombre }}</h3>
+            <a href="{% url 'producto_detalle' producto.id %}">
+              <h3>{{ producto.nombre }}</h3>
+            </a>
             <p>{{ producto.descripcion }}</p>
             <p><strong>Precio:</strong> {{ producto.precio }}</p>
             {% if producto.imagen %}

@@ -1,0 +1,63 @@
+/* Estilos básicos */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+  }
+
+  main {
+    padding: 2em;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    border-radius: 8px;
+  }
+  
+  h1 {
+    font-size: 2em;
+    margin-bottom: 0.5em;
+  }
+  
+  p {
+    font-size: 1.2em;
+    margin-bottom: 1em;
+  }
+  
+  /* Estilos para los botones */
+  .btn-lila, .btn-rojo {
+    display: inline-block;
+    padding: 0.5em 1em;
+    margin: 0.5em 0;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 2px solid #000; /* Borde negro estilo boceto */
+  }
+  
+  .btn-lila {
+    background-color: #8a2be2; /* Lila */
+    color: white;
+  }
+  
+  .btn-lila:hover {
+    background-color: #7a1bc2; /* Lila más oscuro */
+  }
+  
+  .btn-rojo {
+    background-color: #ff4d4d; /* Rojo */
+    color: white;
+  }
+  
+  .btn-rojo:hover {
+    background-color: #e60000; /* Rojo más oscuro */
+  }
+
+  .button-container {
+    display: flex;
+    justify-content: center;
+    gap: 1em;
+    margin-top: 1em;
+  }
