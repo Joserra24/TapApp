@@ -288,6 +288,39 @@
       order: 1;  /* Hace que este botón aparezca primero */
   }
 
+  .floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: black;
+    color: white;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+  .floating-btn a {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+  }
+
+  .floating-btn:hover {
+      background-color: rgba(0, 0, 0, 0.8); /* Mantener el fondo negro con un poco de transparencia */
+  }
+
+  .floating-btn a:hover {
+      color: white;
+      text-decoration: none;
+  }
+
+
   
 
 
