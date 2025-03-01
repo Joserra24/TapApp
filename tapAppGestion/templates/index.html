@@ -9,5 +9,5 @@
     <img src="{% static 'images/logo_blanco.jpeg' %}" alt="Discovering Tentudia" class="main-image" />
 
     <!-- Botón flotante con el símbolo + -->
-    <div class="floating-btn">+</div>
+    <a href="{% url 'crear_pedido' %}" class="floating-btn" style="text-decoration: none;">+</a>
 {% endblock %}
