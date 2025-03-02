@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block title %}Stock - Discovering Tentudia{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesStock.css' %}">
+    <h2>Stock de Productos</h2>
+    
+    <!-- Barra de navegación de categorías -->
+    <nav class="navbar">
+        <ul class="navbar">
+            {% for categoria in categorias %}
+                <li class="{% if categoria == categoria_seleccionada %}active{% endif %}">
+                    <a href="?categoria={{ categoria }}">{{ categoria }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    
+    <div class="productos">
+        {% if productos_filtrados %}
+            {% for producto in productos_filtrados %}
+                <div class="categoria">
+                    <form method="post" action="{% url 'stock' %}">
+                        {% csrf_token %}
+                        <div class="producto">
+                            <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+                            <input type="number" name="cantidad" value="{{ producto.cantidad }}" min="0">
+                            <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                            <button type="submit">Actualizar</button>
+                        </div>
+                        {% if producto.cantidad < 10 %}
+                            <p class="reponer">Necesita reponer</p>
+                        {% endif %}
+                    </form>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-productos">Seleccione una categoría para ver los productos.</p>
+        {% endif %}
+    </div>
+{% endblock %}

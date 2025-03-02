@@ -103,6 +103,11 @@ class PedidoForm(forms.ModelForm):
                 initial=1,
                 required=False
             )
+
+class ActualizarStockForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['cantidad']
         
         
 

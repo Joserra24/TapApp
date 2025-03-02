@@ -25,6 +25,7 @@ from django.contrib.auth.views import LogoutView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
+    path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),
@@ -38,7 +39,8 @@ urlpatterns = [
     path('producto/<int:producto_id>/', views.producto_detalle, name='producto_detalle'),
     path('producto/<int:producto_id>/editar/', views.editar_producto, name='editar_producto'),
     path('producto/<int:producto_id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
-    path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
+    path('stock/', views.stock, name='stock'),  # Nueva URL para la vista stock
+
 
 ]
 

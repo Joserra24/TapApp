@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 
 from django.http import HttpResponse
-from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm
+from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm
 from .models import Producto, Pedido
 
 
@@ -153,6 +153,35 @@ def crear_pedido(request):
         'categoria_seleccionada': categoria_seleccionada
     })
 
+@login_required
+def stock(request):
+    categoria_seleccionada = request.GET.get('categoria', None)
+    
+    if request.method == 'POST':
+        producto_id = request.POST.get('producto_id')
+        categoria_seleccionada = request.POST.get('categoria_seleccionada')
+        producto = Producto.objects.get(id=producto_id)
+        form = ActualizarStockForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return redirect(f'/stock?categoria={categoria_seleccionada}')
+    
+    productos = Producto.objects.exclude(categoria__in=['Cafés', 'Pan']).order_by('categoria')
+    productos_por_categoria = {}
+    for producto in productos:
+        if producto.categoria not in productos_por_categoria:
+            productos_por_categoria[producto.categoria] = []
+        productos_por_categoria[producto.categoria].append(producto)
+    
+    categorias = list(productos_por_categoria.keys())
+    productos_filtrados = productos_por_categoria.get(categoria_seleccionada, []) if categoria_seleccionada else []
+    
+    return render(request, 'stock.html', {
+        'productos_por_categoria': productos_por_categoria,
+        'categorias': categorias,
+        'productos_filtrados': productos_filtrados,
+        'categoria_seleccionada': categoria_seleccionada
+    })
 
 
 

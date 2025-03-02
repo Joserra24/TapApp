@@ -26,6 +26,9 @@ class Producto(models.Model):
     categoria = models.CharField(max_length=50, choices=CATEGORIAS)
     precio = models.DecimalField(max_digits=6, decimal_places=2)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
+    cantidad = models.PositiveIntegerField(default=0)  # Campo para la cantidad en el almacén
+
+
 
     def __str__(self):
         return self.nombre
