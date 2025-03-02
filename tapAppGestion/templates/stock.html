@@ -27,8 +27,10 @@
                         {% csrf_token %}
                         <div class="producto">
                             <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
-                            <input type="number" name="cantidad" value="{{ producto.cantidad }}" min="0">
+                            <label for="cantidad_{{ producto.id }}">Cantidad:</label>
+                            <input type="number" name="cantidad" id="cantidad_{{ producto.id }}" value="{{ producto.cantidad }}" min="0">
                             <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                            <input type="hidden" name="categoria_seleccionada" value="{{ categoria_seleccionada }}">
                             <button type="submit">Actualizar</button>
                         </div>
                         {% if producto.cantidad < 10 %}
@@ -41,4 +43,4 @@
             <p class="no-productos">Seleccione una categoría para ver los productos.</p>
         {% endif %}
     </div>
-{% endblock %}
+    {% endblock %}
