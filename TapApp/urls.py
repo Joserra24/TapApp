@@ -40,6 +40,9 @@ urlpatterns = [
     path('producto/<int:producto_id>/editar/', views.editar_producto, name='editar_producto'),
     path('producto/<int:producto_id>/eliminar/', views.eliminar_producto, name='eliminar_producto'),
     path('stock/', views.stock, name='stock'),  # Nueva URL para la vista stock
+    path('entrada/', views.registrar_entrada, name='registrar_entrada'),
+    path('salida/', views.registrar_salida, name='registrar_salida'),
+    path('control_horarios/', views.control_horarios, name='control_horarios'),
 
 
 ]

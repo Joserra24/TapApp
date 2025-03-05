@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <h2>Registro de Horarios</h2>
+
+    <form action="{% url 'registrar_entrada' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Registrar Entrada</button>
+    </form>
+
+    <form action="{% url 'registrar_salida' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Registrar Salida</button>
+    </form>
+
+    <h3>Tiempo Transcurrido</h3>
+    <p id="cronometro">00:00:00</p>
+
+    <h3>Historial de Horarios</h3>
+    <table>
+        <tr>
+            <th>Hora de Entrada</th>
+            <th>Hora de Salida</th>
+            <th>Duración</th>
+        </tr>
+        {% for registro in registros %}
+        <tr>
+            <td class="hora_entrada" data-hora="{{ registro.hora_entrada|date:'Y-m-d H:i:s' }}" data-activo="{{ registro.activo }}">
+                {{ registro.hora_entrada|date:"F, j Y H:i" }}
+            </td>
+            <td>
+                {% if registro.hora_salida %}
+                    {{ registro.hora_salida|date:"F, j Y H:i" }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>{{ registro.calcular_duracion|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let entradaElemento = document.querySelector(".hora_entrada");
+            let cronometro = document.getElementById("cronometro");
+
+            if (entradaElemento) {
+                let horaEntrada = entradaElemento.getAttribute("data-hora");
+                let activo = entradaElemento.getAttribute("data-activo") === "True"; 
+
+                if (horaEntrada && activo) {
+                    let inicio = new Date(horaEntrada).getTime();
+
+                    function actualizarCronometro() {
+                        let ahora = new Date().getTime();
+                        let diferencia = ahora - inicio;
+
+                        let horas = Math.floor(diferencia / (1000 * 60 * 60));
+                        let minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+                        let segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+                        horas = (horas < 10) ? "0" + horas : horas;
+                        minutos = (minutos < 10) ? "0" + minutos : minutos;
+                        segundos = (segundos < 10) ? "0" + segundos : segundos;
+
+                        cronometro.textContent = horas + ":" + minutos + ":" + segundos;
+                    }
+
+                    setInterval(actualizarCronometro, 1000);
+                } else {
+                    cronometro.textContent = "00:00:00"; // Reinicia a 0 si no hay entrada activa
+                }
+            }
+        });
+    </script>
+{% endblock %}
+

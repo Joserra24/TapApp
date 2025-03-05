@@ -4,11 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
+from django.utils.timezone import now
+
 
 
 from django.http import HttpResponse
-from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm
-from .models import Producto, Pedido
+from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm, RegistroForm
+from .models import Producto, Pedido, RegistroHorario
 
 
 @login_required
@@ -182,6 +184,35 @@ def stock(request):
         'productos_filtrados': productos_filtrados,
         'categoria_seleccionada': categoria_seleccionada
     })
+
+@login_required
+def registrar_entrada(request):
+    # Cerrar cualquier registro activo antes de iniciar uno nuevo
+    RegistroHorario.objects.filter(camarero=request.user, activo=True).update(activo=False, hora_salida=now())
+
+    # Crear un nuevo registro con hora de entrada actual
+    RegistroHorario.objects.create(camarero=request.user)
+    
+    messages.success(request, "Hora de entrada registrada. Cronómetro iniciado.")
+    return redirect('control_horarios')
+
+@login_required
+def registrar_salida(request):
+    registro = RegistroHorario.objects.filter(camarero=request.user, activo=True).first()
+    if registro:
+        registro.hora_salida = now()
+        registro.activo = False  # Marcar el turno como finalizado
+        registro.save()
+        messages.success(request, "Hora de salida registrada. Cronómetro reiniciado.")
+    else:
+        messages.error(request, "No tienes un turno activo.")
+
+    return redirect('control_horarios')
+
+@login_required
+def control_horarios(request):
+    registros = RegistroHorario.objects.filter(camarero=request.user).order_by('-hora_entrada')
+    return render(request, 'control_horarios.html', {'registros': registros})
 
 
 

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now
 
 class Producto(models.Model):
     CATEGORIAS = (
@@ -58,3 +59,18 @@ class PedidoItem(models.Model):
 
     def __str__(self):
         return f'{self.cantidad} x {self.producto.nombre}'
+
+
+class RegistroHorario(models.Model):
+    camarero = models.ForeignKey(User, on_delete=models.CASCADE)
+    hora_entrada = models.DateTimeField(default=now)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)  # Indica si el turno está activo
+
+    def calcular_duracion(self):
+        if self.hora_salida:
+            return self.hora_salida - self.hora_entrada
+        return None
+
+    def __str__(self):
+        return f"{self.camarero.username} - {self.hora_entrada} a {self.hora_salida}"
