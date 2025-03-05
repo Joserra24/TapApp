@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
+import datetime
+
 
 class Producto(models.Model):
     CATEGORIAS = (
@@ -69,7 +71,9 @@ class RegistroHorario(models.Model):
 
     def calcular_duracion(self):
         if self.hora_salida:
-            return self.hora_salida - self.hora_entrada
+            duracion = self.hora_salida - self.hora_entrada
+            segundos = int(duracion.total_seconds())  # Convertir a segundos enteros
+            return str(datetime.timedelta(seconds=segundos))  # Formato hh:mm:ss
         return None
 
     def __str__(self):
