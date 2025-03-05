@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import Producto, Pedido
+from .models import Pedido, Producto, PedidoProducto
 
 class ProductoForm(forms.ModelForm):
     class Meta:
@@ -84,25 +84,32 @@ class EditProfileForm(forms.ModelForm):
 
 class PedidoForm(forms.ModelForm):
     productos = forms.ModelMultipleChoiceField(
-        queryset=Producto.objects.all().order_by('categoria'),
+        queryset=Producto.objects.all(),
         widget=forms.CheckboxSelectMultiple,
         required=True
     )
 
+    cantidades = forms.CharField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Pedido
-        fields = ['productos']
+        fields = ['mesa', 'numero_clientes', 'productos']
 
-    def __init__(self, *args, **kwargs):
-        super(PedidoForm, self).__init__(*args, **kwargs)
-        self.fields['productos'].queryset = Producto.objects.all().order_by('categoria')
-        for producto in self.fields['productos'].queryset:
-            self.fields[f'cantidad_{producto.id}'] = forms.IntegerField(
-                label=f'Cantidad de {producto.nombre}',
-                min_value=1,
-                initial=1,
-                required=False
-            )
+    def save(self, commit=True):
+        pedido = super().save(commit=False)
+        if commit:
+            pedido.save()
+            productos = self.cleaned_data['productos']
+            cantidades = self.cleaned_data.get('cantidades', '{}')
+
+            import json
+            cantidades_dict = json.loads(cantidades)
+
+            for producto in productos:
+                cantidad = cantidades_dict.get(str(producto.id), 1)
+                PedidoProducto.objects.create(pedido=pedido, producto=producto, cantidad=cantidad)
+
+        return pedido
 
 class ActualizarStockForm(forms.ModelForm):
     class Meta:

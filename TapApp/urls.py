@@ -26,6 +26,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
+    path('pedidos/', views.lista_pedidos, name='lista_pedidos'),
+
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),

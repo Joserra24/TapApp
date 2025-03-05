@@ -1,0 +1,56 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lista de Pedidos</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+<body>
+  <header>
+    <h1>Lista de Pedidos</h1>
+  </header>
+
+  <main>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Mesa</th>
+          <th>Número de Clientes</th>
+          <th>Camarero</th>
+          <th>Productos</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pedidos_con_productos %}
+          <tr>
+            <td>{{ item.pedido.id }}</td>
+            <td>{{ item.pedido.mesa }}</td>
+            <td>{{ item.pedido.numero_clientes }}</td>
+            <td>{{ item.pedido.camarero.username }}</td>
+            <td>
+              <ul>
+                {% for producto_pedido in item.productos %}
+                  <li>{{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds</li>
+                {% endfor %}
+              </ul>
+            </td>
+
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6">No hay pedidos registrados.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <br>
+    <a href="{% url 'crear_pedido' %}">Crear nuevo pedido</a>
+  </main>
+  <script src="{% static 'js/listaPedidos.js' %}"></script>
+</body>
+</html>

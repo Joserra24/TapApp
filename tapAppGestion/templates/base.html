@@ -27,7 +27,9 @@
         </div>
 
         <nav>
-            <button>Pedidos</button>
+            <a href="{% url 'lista_pedidos' %}">
+                <button>Pedidos</button>
+            </a>
             <a href="{% url 'menu' %}">
                 <button>Menú</button>
             </a>
