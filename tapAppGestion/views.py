@@ -150,8 +150,13 @@ def crear_pedido(request):
     else:
         form = PedidoForm()
     
-    productos = Producto.objects.all()
-    return render(request, 'crear_pedido.html', {'form': form, 'productos': productos})
+    productos = Producto.objects.all().order_by('categoria')
+    categorias = {}
+    for producto in productos:
+        if producto.categoria not in categorias:
+            categorias[producto.categoria] = []
+        categorias[producto.categoria].append(producto)
+    return render(request, 'crear_pedido.html', {'form': form, 'categorias': categorias})
 
 @login_required
 def stock(request):

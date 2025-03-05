@@ -24,17 +24,24 @@
 
       <fieldset>
         <legend>Selecciona Productos</legend>
-        <div class="productos-grid">
-          {% for producto in productos %}
-            <div class="producto">
-              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" onchange="toggleCantidad({{ producto.id }})">
-              <label for="producto_{{ producto.id }}">
-                {{ producto.nombre }} - {{ producto.precio }}€
-              </label>
-              <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="1" value="1" style="display:none;">
+
+        {% for categoria, productos in categorias.items %}
+          <div class="categoria">
+            <h3>{{ categoria }}</h3>
+            <div class="productos-grid">
+              {% for producto in productos %}
+                <div class="producto">
+                  <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" onchange="toggleCantidad('{{ producto.id }}')">
+                  <label for="producto_{{ producto.id }}">
+                    {{ producto.nombre }} - {{ producto.precio }}€
+                  </label>
+                  <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="1" value="1" style="display:none;">
+                </div>
+              {% endfor %}
             </div>
-          {% endfor %}
-        </div>
+          </div>
+        {% endfor %}
+
       </fieldset>
 
       <input type="hidden" name="cantidades" id="cantidades">
