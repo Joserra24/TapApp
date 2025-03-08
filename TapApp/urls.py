@@ -27,6 +27,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
     path('pedidos/', views.lista_pedidos, name='lista_pedidos'),
+    path('pedidos/<int:pedido_id>/', views.detalles_pedido, name='detalles_pedido'),
 
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),

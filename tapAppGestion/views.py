@@ -122,13 +122,31 @@ def lista_pedidos(request):
 
     for pedido in pedidos:
         productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
+
+         # Calcular el total del pedido sumando (precio * cantidad)
+        total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
+
         pedidos_con_productos.append({
             'pedido': pedido,
-            'productos': productos_pedido
+            'productos': productos_pedido,
+            'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
         })
 
     return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos})
-    
+
+@login_required
+def detalles_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
+
+    total_pedido = sum(pp.producto.precio * pp.cantidad for pp in productos_pedido)
+
+    return render(request, 'detalles_pedido.html', {
+        'pedido': pedido,
+        'productos_pedido': productos_pedido,
+        'total_pedido': round(total_pedido, 2)
+    })
+
 @login_required
 def crear_pedido(request):
     if request.method == 'POST':

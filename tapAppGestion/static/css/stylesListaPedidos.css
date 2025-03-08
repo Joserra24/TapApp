@@ -1,0 +1,86 @@
+/* Contenedor principal */
+.lista-pedidos-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* Espacio entre las tarjetas */
+    width: 90%;
+    max-width: 1200px;
+}
+
+/* Estilo de cada tarjeta de pedido */
+.pedido-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 300px;
+    border-left: 5px solid #4CAF50; /* Color de borde lateral para resaltar */
+}
+
+/* Encabezado de la tarjeta */
+.pedido-card h2 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+/* Estilos para la información del pedido */
+.pedido-info {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Lista de productos */
+.pedido-productos {
+    list-style: none;
+    padding: 0;
+}
+
+.pedido-productos li {
+    background: #f9f9f9;
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Precio total */
+.pedido-total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2E8B57;
+    text-align: right;
+    margin-top: 10px;
+}
+
+/* Botón para crear un nuevo pedido */
+.nuevo-pedido-btn {
+    display: inline-block;
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+.nuevo-pedido-btn:hover {
+    background: #45a049;
+}
+
+.pedido-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.pedido-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.pedido-card:hover {
+    transform: scale(1.05); /* Efecto de zoom al pasar el mouse */
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.2);
+}

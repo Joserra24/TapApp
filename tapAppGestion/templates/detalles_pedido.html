@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles del Pedido</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Detalles del Pedido #{{ pedido.id }}</h1>
+    </header>
+
+    <main class="pedido-detalles-container">
+        <div class="pedido-card">
+            <h2>Mesa: {{ pedido.mesa }}</h2>
+            <p><strong>Número de Clientes:</strong> {{ pedido.numero_clientes }}</p>
+            <p><strong>Camarero:</strong> {{ pedido.camarero.username }}</p>
+
+            <h3>Productos:</h3>
+            <ul class="pedido-productos">
+                {% for producto_pedido in productos_pedido %}
+                <li>{{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds  - {{ producto_pedido.producto.precio }}€</li>
+                {% endfor %}
+            </ul>
+
+            <p class="pedido-total">Total: {{ total_pedido }}€</p>
+        </div>
+    </main>
+
+    <a href="{% url 'lista_pedidos' %}" class="nuevo-pedido-btn">Volver a la lista</a>
+</body>
+</html>
