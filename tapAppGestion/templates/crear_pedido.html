@@ -36,34 +36,34 @@
           <button type="submit" class="boton-guardar">Guardar Pedido</button>   
         </div>
 
-        <label for="categoria-selector">Filtrar por categoría:</label>
-        <select id="categoria-selector" onchange="filtrarProductos()">
-          <option value="todas">Todas</option>
-          {% for categoria in categorias.keys %}
-            <option value="{{ categoria }}">{{ categoria }}</option>
-          {% endfor %}
-        </select>
-
-
-        <fieldset>
-
-          {% for categoria, productos in categorias.items %}
-            <div class="categoria-container" data-categoria="{{ categoria }}">
-              <h3>{{ categoria }}</h3>
-              <div class="productos-grid">
-                {% for producto in productos %}
-                <div class="producto">
-                  <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
-                  <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
-                  <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
-                  <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
-                  <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
-                </div>
+        <div class="productos-seccion">
+          <label for="categoria-selector" class="filtro-label">Filtrar por categoría:</label>
+          <select id="categoria-selector" class="filtro-select" onchange="filtrarProductos()">
+              <option value="todas">Todas</option>
+              {% for categoria in categorias.keys %}
+                  <option value="{{ categoria }}">{{ categoria }}</option>
               {% endfor %}
-              </div>
-            </div>
-          {% endfor %}
-        </fieldset>
+          </select>
+      
+          <fieldset>
+              {% for categoria, productos in categorias.items %}
+                  <div class="categoria-container" data-categoria="{{ categoria }}">
+                      <h3>{{ categoria }}</h3>
+                      <div class="productos-grid">
+                          {% for producto in productos %}
+                          <div class="producto">
+                              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
+                              <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+                              <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
+                              <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
+                              <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
+                          </div>
+                          {% endfor %}
+                      </div>
+                  </div>
+              {% endfor %}
+          </fieldset>
+      </div>
 
         <input type="hidden" name="cantidades" id="cantidades">
       </form>
