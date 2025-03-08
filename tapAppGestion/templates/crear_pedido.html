@@ -33,6 +33,10 @@
           </div>
 
           </div>
+          <h3>Productos en el Pedido:</h3>
+          <ul id="pedido-lista"></ul> <!-- Aquí aparecerán los productos -->
+          <h3>Total del Pedido: <span id="total-pedido">0.00€</span></h3>
+
           <button type="submit" class="boton-guardar">Guardar Pedido</button>   
         </div>
 
@@ -52,11 +56,13 @@
                       <div class="productos-grid">
                           {% for producto in productos %}
                           <div class="producto">
-                              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
+                              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
                               <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
-                              <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
-                              <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
-                              <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
+                              <div class="cantidad-control">
+                                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
+                                <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
+                                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
+                              </div>
                           </div>
                           {% endfor %}
                       </div>
@@ -78,19 +84,43 @@
         let cantidad = parseInt(cantidadInput.value) + cambio;
 
         if (cantidad < 0) {
-          cantidad = 0; // Evitar cantidades negativas
+            cantidad = 0; // Evitar cantidades negativas
         }
 
         cantidadInput.value = cantidad;
+        checkbox.checked = cantidad > 0; // Marcar o desmarcar según la cantidad
 
-        if (cantidad > 0) {
-          checkbox.checked = true; // Activa el checkbox cuando hay al menos 1 unidad
-        } else {
-          checkbox.checked = false; // Desactiva el checkbox cuando la cantidad es 0
-        }
+        actualizarPedido(); // Actualizar la lista de productos en "Detalles del Pedido"
+    }
 
-        toggleCantidad(id); // Llamar a la función para que funcione correctamente
-    } 
+    function actualizarPedido() {
+        const listaPedido = document.getElementById("pedido-lista");
+        const totalPedidoElemento = document.getElementById("total-pedido");
+        listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
+        let totalPedido = 0; // Inicializar total en 0
+
+        document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+            let cantidad = parseInt(input.value);
+            if (cantidad > 0) {
+                let productoId = input.id.replace("cantidad_", "");
+                let checkbox = document.getElementById('producto_' + productoId);
+                let nombreProducto = checkbox.dataset.nombre; // Obtener nombre del producto
+                let precioProducto = parseFloat(checkbox.dataset.precio); // Obtener precio del producto
+                let subtotal = precioProducto * cantidad; // Calcular subtotal del producto
+
+                // Agregar producto a la lista con su precio y cantidad
+                let item = document.createElement("li");
+                item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+                listaPedido.appendChild(item);
+
+                // Sumar al total del pedido
+                totalPedido += subtotal;
+            }
+        });
+
+        // Mostrar el total del pedido
+        totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+    }
 
     function toggleCantidad(id) {
       const checkbox = document.getElementById('producto_' + id);
