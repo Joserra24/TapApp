@@ -12,44 +12,86 @@
     <h1>Crear Pedido</h1>
   </header>
 
-  <main>
-    <form id="pedido-form" method="post">
-      {% csrf_token %}
-      
-      <label for="mesa">Mesa:</label>
-      {{ form.mesa }}
+  <main class="contenedor-pedido">
+    <!-- Sección izquierda: Formulario de pedido -->
+    <div class="pedido-seccion">
 
-      <label for="numero_clientes">Número de Clientes:</label>
-      {{ form.numero_clientes }}
+      <form id="pedido-form" method="post">
+        {% csrf_token %}
 
-      <fieldset>
-        <legend>Selecciona Productos</legend>
+        <div class="mesa-info">
+          <h2>Detalles del Pedido</h2>
 
-        {% for categoria, productos in categorias.items %}
-          <div class="categoria">
-            <h3>{{ categoria }}</h3>
-            <div class="productos-grid">
-              {% for producto in productos %}
+          <div class="mesa-campo">
+            <label for="mesa"><strong>Mesa:</strong></label>
+            {{ form.mesa }}
+          </div>
+    
+          <div class="clientes-campo">
+              <label for="numero_clientes"><strong>Número de Clientes:</strong></label>
+              {{ form.numero_clientes }}
+          </div>
+
+          </div>
+          <button type="submit" class="boton-guardar">Guardar Pedido</button>   
+        </div>
+
+        <label for="categoria-selector">Filtrar por categoría:</label>
+        <select id="categoria-selector" onchange="filtrarProductos()">
+          <option value="todas">Todas</option>
+          {% for categoria in categorias.keys %}
+            <option value="{{ categoria }}">{{ categoria }}</option>
+          {% endfor %}
+        </select>
+
+
+        <fieldset>
+
+          {% for categoria, productos in categorias.items %}
+            <div class="categoria-container" data-categoria="{{ categoria }}">
+              <h3>{{ categoria }}</h3>
+              <div class="productos-grid">
+                {% for producto in productos %}
                 <div class="producto">
-                  <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" onchange="toggleCantidad('{{ producto.id }}')">
-                  <label for="producto_{{ producto.id }}">
-                    {{ producto.nombre }} - {{ producto.precio }}€
-                  </label>
-                  <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="1" value="1" style="display:none;">
+                  <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
+                  <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+                  <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
+                  <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
+                  <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
                 </div>
               {% endfor %}
+              </div>
             </div>
-          </div>
-        {% endfor %}
+          {% endfor %}
+        </fieldset>
 
-      </fieldset>
-
-      <input type="hidden" name="cantidades" id="cantidades">
-      <button type="submit">Guardar Pedido</button>
-    </form>
+        <input type="hidden" name="cantidades" id="cantidades">
+      </form>
+    </div>
   </main>
 
   <script>
+
+    function cambiarCantidad(id, cambio) {
+        const cantidadInput = document.getElementById('cantidad_' + id);
+        const checkbox = document.getElementById('producto_' + id);
+        let cantidad = parseInt(cantidadInput.value) + cambio;
+
+        if (cantidad < 0) {
+          cantidad = 0; // Evitar cantidades negativas
+        }
+
+        cantidadInput.value = cantidad;
+
+        if (cantidad > 0) {
+          checkbox.checked = true; // Activa el checkbox cuando hay al menos 1 unidad
+        } else {
+          checkbox.checked = false; // Desactiva el checkbox cuando la cantidad es 0
+        }
+
+        toggleCantidad(id); // Llamar a la función para que funcione correctamente
+    } 
+
     function toggleCantidad(id) {
       const checkbox = document.getElementById('producto_' + id);
       const cantidadInput = document.getElementById('cantidad_' + id);
@@ -58,6 +100,19 @@
       } else {
         cantidadInput.style.display = 'none';
       }
+    }
+
+    function filtrarProductos() {
+      const categoriaSeleccionada = document.getElementById("categoria-selector").value;
+      const categorias = document.querySelectorAll(".categoria-container");
+
+      categorias.forEach(categoria => {
+        if (categoriaSeleccionada === "todas" || categoria.dataset.categoria === categoriaSeleccionada) {
+          categoria.style.display = "block";
+        } else {
+          categoria.style.display = "none";
+        }
+      });
     }
 
     document.getElementById('pedido-form').addEventListener('submit', function(event) {
