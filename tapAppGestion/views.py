@@ -148,6 +148,16 @@ def detalles_pedido(request, pedido_id):
     })
 
 @login_required
+def eliminar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    if request.method == 'POST':
+        pedido.delete()
+        return redirect('lista_pedidos')  # Redirige a la lista de pedidos después de eliminar
+
+    return render(request, 'confirmacion_eliminar_pedido.html', {'pedido': pedido})
+
+@login_required
 def crear_pedido(request):
     if request.method == 'POST':
         form = PedidoForm(request.POST)

@@ -18,7 +18,6 @@
   </header>
 
   <main>
-    <h1>Lista de Pedidos</h1>
     <div class="lista-pedidos-container">
         {% for item in pedidos_con_productos %}
         <a href="{% url 'detalles_pedido' item.pedido.id %}" class="pedido-link">

@@ -28,6 +28,13 @@
         </div>
     </main>
 
-    <a href="{% url 'lista_pedidos' %}" class="nuevo-pedido-btn">Volver a la lista</a>
+    <div class="botones-container">
+        <a href="{% url 'lista_pedidos' %}" class="volver-btn">Volver a la lista</a>
+    
+        <form action="{% url 'eliminar_pedido' pedido.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este pedido?');">
+            {% csrf_token %}
+            <button type="submit" class="eliminar-btn">Eliminar Pedido</button>
+        </form>
+    </div>
 </body>
 </html>
