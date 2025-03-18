@@ -158,6 +158,82 @@ def eliminar_pedido(request, pedido_id):
     return render(request, 'confirmacion_eliminar_pedido.html', {'pedido': pedido})
 
 @login_required
+def editar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if request.method == 'POST':
+        form = PedidoForm(request.POST, instance=pedido)
+        if form.is_valid():
+            pedido = form.save(commit=False)
+            pedido.camarero = request.user  # Mantener el camarero original
+            pedido.save()
+
+            # Obtener los productos del formulario
+            productos = request.POST.getlist('productos')
+            cantidades = json.loads(request.POST.get('cantidades', '{}'))
+
+            for producto_id in productos:
+                producto = Producto.objects.get(id=producto_id)
+                cantidad = int(cantidades.get(str(producto.id), 1))
+
+                # Verificar si el producto ya está en el pedido
+                pedido_producto, creado = PedidoProducto.objects.get_or_create(pedido=pedido, producto=producto)
+
+                if creado:
+                    # Si es un nuevo producto, lo añadimos con la cantidad seleccionada
+                    pedido_producto.cantidad = cantidad
+                else:
+                    # Si ya estaba en el pedido, sumamos la nueva cantidad
+                    pedido_producto.cantidad += cantidad
+
+                pedido_producto.save()
+
+            return redirect('lista_pedidos')
+
+    else:
+        form = PedidoForm(instance=pedido)
+
+    # Obtener los productos actuales del pedido
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+    productos_seleccionados = {str(pp.producto.id): pp.cantidad for pp in productos_pedido}
+
+    # Organizar productos en categorías
+    productos = Producto.objects.all().order_by('categoria')
+    categorias = {}
+    for producto in productos:
+        if producto.categoria not in categorias:
+            categorias[producto.categoria] = []
+        categorias[producto.categoria].append(producto)
+
+    return render(request, 'crear_pedido.html', {
+        'form': form,
+        'categorias': categorias,
+        'productos_seleccionados': json.dumps(productos_seleccionados),
+        'es_edicion': True,
+        'pedido_id': pedido.id
+    })
+
+@login_required
+def eliminar_producto_pedido(request, pedido_id, producto_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    producto = get_object_or_404(Producto, id=producto_id)
+
+    # Buscar si el producto está en el pedido
+    pedido_producto = PedidoProducto.objects.filter(pedido=pedido, producto=producto).first()
+
+    if pedido_producto:
+        # Si solo hay una unidad, eliminar el producto del pedido
+        if pedido_producto.cantidad == 1:
+            pedido_producto.delete()
+        else:
+            # Si hay más de una unidad, reducir la cantidad
+            pedido_producto.cantidad -= 1
+            pedido_producto.save()
+
+    return redirect('detalles_pedido', pedido_id=pedido.id)
+
+
+@login_required
 def crear_pedido(request):
     if request.method == 'POST':
         form = PedidoForm(request.POST)

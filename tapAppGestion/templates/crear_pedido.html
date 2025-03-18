@@ -2,21 +2,24 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Crear Pedido</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/stylesCrearPedido.css' %}">
 </head>
+
 <body>
   <header>
-    <h1>Crear Pedido</h1>
+    <h1>{% if es_edicion %}Editar Pedido #{{ pedido_id }}{% else %}Crear Pedido{% endif %}</h1>
   </header>
 
   <main class="contenedor-pedido">
     <!-- Sección izquierda: Formulario de pedido -->
     <div class="pedido-seccion">
 
-      <form id="pedido-form" method="post">
+      <form id="pedido-form" method="post"
+        action="{% if es_edicion %}{% url 'editar_pedido' pedido_id %}{% else %}{% url 'crear_pedido' %}{% endif %}">
         {% csrf_token %}
 
         <div class="mesa-info">
@@ -26,100 +29,103 @@
             <label for="mesa"><strong>Mesa:</strong></label>
             {{ form.mesa }}
           </div>
-    
+
           <div class="clientes-campo">
-              <label for="numero_clientes"><strong>Número de Clientes:</strong></label>
-              {{ form.numero_clientes }}
+            <label for="numero_clientes"><strong>Número de Clientes:</strong></label>
+            {{ form.numero_clientes }}
           </div>
 
-          </div>
-          <h3>Productos en el Pedido:</h3>
-          <ul id="pedido-lista"></ul> <!-- Aquí aparecerán los productos -->
-          <h3>Total del Pedido: <span id="total-pedido">0.00€</span></h3>
-
-          <button type="submit" class="boton-guardar">Guardar Pedido</button>   
         </div>
+        <h3>Productos en el Pedido:</h3>
+        <ul id="pedido-lista"></ul> <!-- Aquí aparecerán los productos -->
+        <h3>Total del Pedido: <span id="total-pedido">0.00€</span></h3>
 
-        <div class="productos-seccion">
-          <label for="categoria-selector" class="filtro-label">Filtrar por categoría:</label>
-          <select id="categoria-selector" class="filtro-select" onchange="filtrarProductos()">
-              <option value="todas">Todas</option>
-              {% for categoria in categorias.keys %}
-                  <option value="{{ categoria }}">{{ categoria }}</option>
-              {% endfor %}
-          </select>
-      
-          <fieldset>
-              {% for categoria, productos in categorias.items %}
-                  <div class="categoria-container" data-categoria="{{ categoria }}">
-                      <h3>{{ categoria }}</h3>
-                      <div class="productos-grid">
-                          {% for producto in productos %}
-                          <div class="producto">
-                              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}" data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">
-                              <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
-                              <div class="cantidad-control">
-                                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
-                                <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0" readonly>
-                                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
-                              </div>
-                          </div>
-                          {% endfor %}
-                      </div>
-                  </div>
-              {% endfor %}
-          </fieldset>
-      </div>
+        <button type="submit" class="boton-guardar">Guardar Pedido</button>
+    </div>
 
-        <input type="hidden" name="cantidades" id="cantidades">
-      </form>
+    <div class="productos-seccion">
+      <label for="categoria-selector" class="filtro-label">Filtrar por categoría:</label>
+      <select id="categoria-selector" class="filtro-select" onchange="filtrarProductos()">
+        <option value="todas">Todas</option>
+        {% for categoria in categorias.keys %}
+        <option value="{{ categoria }}">{{ categoria }}</option>
+        {% endfor %}
+      </select>
+
+      <fieldset>
+        {% for categoria, productos in categorias.items %}
+        <div class="categoria-container" data-categoria="{{ categoria }}">
+          <h3>{{ categoria }}</h3>
+          <div class="productos-grid">
+            {% for producto in productos %}
+            <div class="producto">
+              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}"
+                data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" style="display:none;"
+                onchange="toggleCantidad('{{ producto.id }}')">
+              <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+              <div class="cantidad-control">
+                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
+                <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0"
+                  readonly>
+                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </fieldset>
+    </div>
+
+    <input type="hidden" name="cantidades" id="cantidades">
+    </form>
     </div>
   </main>
 
   <script>
 
     function cambiarCantidad(id, cambio) {
-        const cantidadInput = document.getElementById('cantidad_' + id);
-        const checkbox = document.getElementById('producto_' + id);
-        let cantidad = parseInt(cantidadInput.value) + cambio;
+      const cantidadInput = document.getElementById('cantidad_' + id);
+      const checkbox = document.getElementById('producto_' + id);
+      let cantidad = parseInt(cantidadInput.value) + cambio;
 
-        if (cantidad < 0) {
-            cantidad = 0; // Evitar cantidades negativas
-        }
+      if (cantidad < 0) {
+        cantidad = 0; // Evitar cantidades negativas
+      }
 
-        cantidadInput.value = cantidad;
-        checkbox.checked = cantidad > 0; // Marcar o desmarcar según la cantidad
+      cantidadInput.value = cantidad;
+      checkbox.checked = cantidad > 0; // Marcar o desmarcar según la cantidad
 
-        actualizarPedido(); // Actualizar la lista de productos en "Detalles del Pedido"
+      actualizarPedido(); // Actualizar la lista de productos en "Detalles del Pedido"
     }
 
     function actualizarPedido() {
-        const listaPedido = document.getElementById("pedido-lista");
-        const totalPedidoElemento = document.getElementById("total-pedido");
-        listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
-        let totalPedido = 0; // Inicializar total en 0
+      const listaPedido = document.getElementById("pedido-lista");
+      const totalPedidoElemento = document.getElementById("total-pedido");
+      listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
+      let totalPedido = 0; // Inicializar total en 0
 
-        document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
-            let cantidad = parseInt(input.value);
-            if (cantidad > 0) {
-                let productoId = input.id.replace("cantidad_", "");
-                let checkbox = document.getElementById('producto_' + productoId);
-                let nombreProducto = checkbox.dataset.nombre; // Obtener nombre del producto
-                let precioProducto = parseFloat(checkbox.dataset.precio); // Obtener precio del producto
-                let subtotal = precioProducto * cantidad; // Calcular subtotal del producto
+      document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+        let cantidad = parseInt(input.value);
+        if (cantidad > 0) {
+          let productoId = input.id.replace("cantidad_", "");
+          let checkbox = document.getElementById('producto_' + productoId);
+          let nombreProducto = checkbox.dataset.nombre; // Obtener nombre del producto
+          let precioProducto = parseFloat(checkbox.dataset.precio); // Obtener precio del producto
+          let subtotal = precioProducto * cantidad; // Calcular subtotal del producto
 
-                // Agregar producto a la lista con su precio y cantidad
-                let item = document.createElement("li");
-                item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
-                listaPedido.appendChild(item);
+          // Agregar producto a la lista con su precio y cantidad
+          let item = document.createElement("li");
+          item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+          listaPedido.appendChild(item);
 
-                // Sumar al total del pedido
-                totalPedido += subtotal;
-            }
-        });
+          // Sumar al total del pedido
+          totalPedido += subtotal;
+        }
+      });
 
-        // Mostrar el total del pedido
-        totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+      // Mostrar el total del pedido
+      totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
     }
 
     function toggleCantidad(id) {
@@ -145,7 +151,7 @@
       });
     }
 
-    document.getElementById('pedido-form').addEventListener('submit', function(event) {
+    document.getElementById('pedido-form').addEventListener('submit', function (event) {
       const cantidades = {};
       document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
         if (input.style.display !== 'none') {
@@ -154,6 +160,70 @@
       });
       document.getElementById('cantidades').value = JSON.stringify(cantidades);
     });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const productosSeleccionados = {{ productos_seleccionados| safe
+    }};
+    const listaPedido = document.getElementById("pedido-lista");
+    const totalPedidoElemento = document.getElementById("total-pedido");
+    let totalPedido = 0;
+
+    for (const [productoId, cantidad] of Object.entries(productosSeleccionados)) {
+      let checkbox = document.getElementById('producto_' + productoId);
+      let cantidadInput = document.getElementById('cantidad_' + productoId);
+
+      if (checkbox && cantidadInput) {
+        checkbox.checked = true;
+        cantidadInput.value = cantidad;
+
+        let nombreProducto = checkbox.dataset.nombre;
+        let precioProducto = parseFloat(checkbox.dataset.precio);
+        let subtotal = precioProducto * cantidad;
+
+        let item = document.createElement("li");
+        item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+        listaPedido.appendChild(item);
+
+        totalPedido += subtotal;
+      }
+    }
+
+    totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+
+    // Actualizar la lista de productos en el pedido al cambiar cantidades
+    document.querySelectorAll('.cantidad-control button').forEach(button => {
+      button.addEventListener('click', function () {
+        actualizarPedido();
+      });
+    });
+    });
+
+    function actualizarPedido() {
+      const listaPedido = document.getElementById("pedido-lista");
+      const totalPedidoElemento = document.getElementById("total-pedido");
+      listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
+      let totalPedido = 0;
+
+      document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+        let cantidad = parseInt(input.value);
+        if (cantidad > 0) {
+          let productoId = input.id.replace("cantidad_", "");
+          let checkbox = document.getElementById('producto_' + productoId);
+          let nombreProducto = checkbox.dataset.nombre;
+          let precioProducto = parseFloat(checkbox.dataset.precio);
+          let subtotal = precioProducto * cantidad;
+
+          let item = document.createElement("li");
+          item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+          listaPedido.appendChild(item);
+
+          totalPedido += subtotal;
+        }
+      });
+
+      totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+    }
   </script>
 </body>
 </html>

@@ -22,7 +22,7 @@ body {
     border-radius: 10px;
     box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     padding: 15px;
-    width: 300px;
+    width: 500px;
     border-left: 5px solid #4CAF50; /* Color de borde lateral para resaltar */
 }
 
@@ -95,10 +95,9 @@ body {
 
 .botones-container {
     display: flex;
-    justify-content: space-between; /* Espaciado entre los botones */
-    align-items: center;
+    justify-content: center; /* Espaciado entre los botones */
     margin-top: 20px;
-    gap: 10px; /* Espacio entre botones */
+    gap: 15px; /* Espacio entre botones */
 }
 
 .eliminar-btn {
@@ -114,6 +113,7 @@ body {
     text-align: center;
 }
 
+
 .eliminar-btn:hover {
     background-color: #cc0000;
 }
@@ -121,16 +121,60 @@ body {
 .volver-btn {
     background-color: #4CAF50;
     color: white;
-    padding: 10px 15px;
-    text-decoration: none;
-    border-radius: 5px;
-    font-size: 16px;
     border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
     cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
 }
 
 .volver-btn:hover {
     background-color: #45a049;
 }
+
+.eliminar-btn-details {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.eliminar-btn:hover {
+    background-color: #cc0000;
+}
+
+.editar-btn {
+    background-color: #8A2BE2; /* Lila */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.editar-btn:hover {
+    background-color: #6A1BA3; /* Un lila más oscuro al pasar el mouse */
+}
+
+/* Contenedor principal del pedido */
+.pedido-detalles-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: auto;
+    max-width: 600px;
+}
+
+
 
 

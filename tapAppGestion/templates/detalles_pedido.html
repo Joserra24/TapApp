@@ -1,17 +1,19 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Detalles del Pedido</title>
     <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
 </head>
-<body>
-    <header>
-        <h1>Detalles del Pedido #{{ pedido.id }}</h1>
-    </header>
 
+<body>
     <main class="pedido-detalles-container">
+        <!-- Contenedor del título -->
+        <h1 class="pedido-titulo">Detalles del Pedido #{{ pedido.id }}</h1>
+
+        <!-- Contenedor de la información del pedido -->
         <div class="pedido-card">
             <h2>Mesa: {{ pedido.mesa }}</h2>
             <p><strong>Número de Clientes:</strong> {{ pedido.numero_clientes }}</p>
@@ -20,21 +22,33 @@
             <h3>Productos:</h3>
             <ul class="pedido-productos">
                 {% for producto_pedido in productos_pedido %}
-                <li>{{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds  - {{ producto_pedido.producto.precio }}€</li>
+                <li>
+                    {{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€
+                    <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}" class="eliminar-btn-details">X</a>
+                </li> 
                 {% endfor %}
             </ul>
 
             <p class="pedido-total">Total: {{ total_pedido }}€</p>
         </div>
-    </main>
 
-    <div class="botones-container">
-        <a href="{% url 'lista_pedidos' %}" class="volver-btn">Volver a la lista</a>
-    
-        <form action="{% url 'eliminar_pedido' pedido.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este pedido?');">
-            {% csrf_token %}
-            <button type="submit" class="eliminar-btn">Eliminar Pedido</button>
-        </form>
-    </div>
+        <!-- Contenedor de los botones -->
+        <div class="botones-container">
+            <form action="{% url 'lista_pedidos' %}" method="get">
+                <button type="submit" class="volver-btn">Volver a la lista</button>
+            </form>
+
+            <form action="{% url 'editar_pedido' pedido.id %}" method="get">
+                <button type="submit" class="editar-btn">Editar Pedido</button>
+            </form>
+
+            <form action="{% url 'eliminar_pedido' pedido.id %}" method="POST"
+                onsubmit="return confirm('¿Estás seguro de que quieres eliminar este pedido?');">
+                {% csrf_token %}
+                <button type="submit" class="eliminar-btn">Eliminar Pedido</button>
+            </form>
+        </div>
+    </main>
 </body>
+
 </html>
