@@ -26,6 +26,17 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
     path('crear_pedido/', views.crear_pedido, name='crear_pedido'),
+    path('pedidos/', views.lista_pedidos, name='lista_pedidos'),
+    path('pedidos/<int:pedido_id>/', views.detalles_pedido, name='detalles_pedido'),
+    path('eliminar_pedido/<int:pedido_id>/', views.eliminar_pedido, name='eliminar_pedido'),
+    path('editar_pedido/<int:pedido_id>/', views.editar_pedido, name='editar_pedido'),
+    path('eliminar_producto_pedido/<int:pedido_id>/<int:producto_id>/', views.eliminar_producto_pedido, name='eliminar_producto_pedido'),
+    path('pagar_pedido/<int:pedido_id>/', views.pagar_pedido, name='pagar_pedido'),
+    path('pedidos_cerrados/', views.lista_pedidos_cerrados, name='lista_pedidos_cerrados'),
+    path('pedido_cerrado/<int:pedido_id>/', views.detalle_pedido_cerrado, name='detalle_pedido_cerrado'),
+
+
+
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),

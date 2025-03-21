@@ -1,0 +1,302 @@
+/* Contenedor principal */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    margin: 0;
+    padding: 0;
+  }
+
+.lista-pedidos-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* Espacio entre las tarjetas */
+    width: 90%;
+    max-width: 1200px;
+}
+
+/* Estilo de cada tarjeta de pedido */
+.pedido-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    width: 500px;
+    border-left: 5px solid #4CAF50; /* Color de borde lateral para resaltar */
+}
+
+/* Encabezado de la tarjeta */
+.pedido-card h2 {
+    font-size: 20px;
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+/* Estilos para la información del pedido */
+.pedido-info {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 10px;
+}
+
+/* Lista de productos */
+.pedido-productos {
+    list-style: none;
+    padding: 0;
+}
+
+.pedido-productos li {
+    background: #f9f9f9;
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+/* Precio total */
+.pedido-total {
+    font-size: 18px;
+    font-weight: bold;
+    color: #2E8B57;
+    text-align: right;
+    margin-top: 10px;
+}
+
+/* Botón para crear un nuevo pedido */
+.nuevo-pedido-btn {
+    display: inline-block;
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    font-size: 16px;
+}
+
+.nuevo-pedido-btn:hover {
+    background: #45a049;
+}
+
+.pedido-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.pedido-card {
+    transition: transform 0.2s ease-in-out;
+}
+
+.pedido-card:hover {
+    transform: scale(1.05); /* Efecto de zoom al pasar el mouse */
+    box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.botones-container {
+    display: flex;
+    justify-content: center; /* Espaciado entre los botones */
+    margin-top: 20px;
+    gap: 15px; /* Espacio entre botones */
+}
+
+.eliminar-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    width: 100%;
+    text-align: center;
+}
+
+
+.eliminar-btn:hover {
+    background-color: #cc0000;
+}
+
+.volver-btn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.volver-btn:hover {
+    background-color: #45a049;
+}
+
+.eliminar-btn-details {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.eliminar-btn:hover {
+    background-color: #cc0000;
+}
+
+.editar-btn {
+    background-color: #8A2BE2; /* Lila */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.editar-btn:hover {
+    background-color: #6A1BA3; /* Un lila más oscuro al pasar el mouse */
+}
+
+/* Contenedor principal del pedido */
+.pedido-detalles-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: auto;
+    max-width: 600px;
+}
+
+.pagar-btn {
+    background-color: #FFD700; /* Amarillo oro */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.pagar-btn:hover {
+    background-color: #DAA520;
+}
+
+/* Contenedor del título y botón */
+.header-pedidos {
+    display: flex;
+    justify-content: center; /* Centra el contenido */
+    align-items: center;
+    position: relative;
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+}
+
+/* Estilo del botón */
+.header-pedidos .volver-btn {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap; /* Evita que el texto se corte */
+    flex-shrink: 0; /* Evita que el botón se reduzca demasiado */
+    margin-left: 30px; /* Espacio entre el título y el botón */
+
+}
+
+.header-pedidos .volver-btn:hover {
+    background-color: #218838;
+}
+
+.pedido-link {
+    text-decoration: none; /* Quita el subrayado del enlace */
+    color: inherit; /* Mantiene el color original del texto */
+    display: block;
+}
+
+/* Efecto al pasar el ratón por encima */
+.pedido-card:hover {
+    transform: scale(1.02); /* Efecto de agrandamiento */
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+/* Contenedor del formulario de filtros */
+.filtro-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Espacio entre elementos */
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+}
+
+/* Estilos para las etiquetas */
+.filtro-form label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Estilos para el select */
+.filtro-form select {
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Estilos para los inputs de fecha */
+.filtro-form input[type="date"],
+.filtro-form input[type="month"] {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Estilos para el botón de filtrar */
+.filtro-form button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filtro-form button:hover {
+    background-color: #0056b3;
+}
+
+
+
+
+
+
+

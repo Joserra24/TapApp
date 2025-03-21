@@ -1,0 +1,87 @@
+{% load tz %}
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pedidos Cerrados</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+
+<body>
+    <header class="header-pedidos">
+        <h1>Pedidos Cerrados</h1>
+        <a href="{% url 'lista_pedidos' %}" class="volver-btn">Volver a Pedidos Abiertos</a>
+    </header>
+
+    <!-- Filtros -->
+    <form method="get" class="filtro-form">
+        <label for="filtro">Filtrar por:</label>
+        <select name="filtro" id="filtro">
+            <option value="recientes" {% if filtro_actual == "recientes" %}selected{% endif %}>Más recientes</option>
+            <option value="ultima_semana" {% if filtro_actual == "ultima_semana" %}selected{% endif %}>Última semana</option>
+            <option value="ultimo_mes" {% if filtro_actual == "ultimo_mes" %}selected{% endif %}>Último mes</option>
+            <option value="ultimo_ano" {% if filtro_actual == "ultimo_ano" %}selected{% endif %}>Último año</option>
+            <option value="por_fecha" {% if filtro_actual == "por_fecha" %}selected{% endif %}>Por fecha</option>
+            <option value="por_mes" {% if filtro_actual == "por_mes" %}selected{% endif %}>Por mes</option>
+            <option value="por_dia" {% if filtro_actual == "por_dia" %}selected{% endif %}>Por día</option>
+        </select>
+
+        <!-- Filtros específicos por fecha -->
+        <div id="fecha-filtro" style="display: none;">
+            <label>Desde:</label>
+            <input type="date" name="fecha_inicio">
+            <label>Hasta:</label>
+            <input type="date" name="fecha_fin">
+        </div>
+
+        <div id="mes-filtro" style="display: none;">
+            <label>Selecciona un mes:</label>
+            <input type="month" name="mes">
+        </div>
+
+        <div id="dia-filtro" style="display: none;">
+            <label>Selecciona un día:</label>
+            <input type="date" name="dia">
+        </div>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <!-- Lista de pedidos -->
+    <main class="lista-pedidos-container">
+        {% for item in pedidos_con_precio %}
+        <a href="{% url 'detalle_pedido_cerrado' item.pedido.id %}" class="pedido-link">
+            <div class="pedido-card">
+                <p><strong>Fecha de cierre:</strong> {{ item.pedido.fecha_cierre|timezone:"Europe/Madrid"|date:"d/m/Y H:i" }}</p>
+                <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
+                <p><strong>Total:</strong> {{ item.total_pedido|floatformat:2 }}€</p>
+            </div>
+        </a>
+        {% empty %}
+        <p>No hay pedidos cerrados.</p>
+        {% endfor %}
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let filtroSelect = document.getElementById("filtro");
+            let fechaFiltro = document.getElementById("fecha-filtro");
+            let mesFiltro = document.getElementById("mes-filtro");
+            let diaFiltro = document.getElementById("dia-filtro");
+
+            function toggleFilters() {
+                fechaFiltro.style.display = (filtroSelect.value === "por_fecha") ? "block" : "none";
+                mesFiltro.style.display = (filtroSelect.value === "por_mes") ? "block" : "none";
+                diaFiltro.style.display = (filtroSelect.value === "por_dia") ? "block" : "none";
+            }
+
+            filtroSelect.addEventListener("change", toggleFilters);
+            toggleFilters();
+        });
+    </script>
+
+</body>
+</html>

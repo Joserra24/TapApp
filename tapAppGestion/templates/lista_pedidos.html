@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Lista de Pedidos</title>
+  <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+
+<body>
+  <header>
+    <h1>Lista de Pedidos</h1>
+  </header>
+
+  <main>
+    <div class="lista-pedidos-container">
+      {% for item in pedidos_con_productos %}
+      <a href="{% url 'detalles_pedido' item.pedido.id %}" class="pedido-link">
+        <div class="pedido-card">
+          <h2>Pedido #{{ item.pedido.id }}</h2>
+          <p class="pedido-info"><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
+          <p class="pedido-info"><strong>Número de Clientes:</strong> {{ item.pedido.numero_clientes }}</p>
+          <p class="pedido-info"><strong>Camarero:</strong> {{ item.pedido.camarero.username }}</p>
+
+          <h3>Productos:</h3>
+          <ul class="pedido-productos">
+            {% for producto_pedido in item.productos %}
+            <li>{{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€</li>
+            {% endfor %}
+          </ul>
+
+          <p class="pedido-total">Total: {{ item.total_pedido }}€</p>
+        </div>
+      </a>
+      {% empty %}
+      <p>No hay pedidos registrados.</p>
+      {% endfor %}
+    </div>
+    <form action="{% url 'lista_pedidos_cerrados' %}">
+      <button type="submit" class="volver-btn">Ver Pedidos Cerrados</button>
+    </form>
+
+  </main>
+</body>
+
+</html>
+{% endblock %}

@@ -2,179 +2,228 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Crear Pedido</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/stylesCrearPedido.css' %}">
 </head>
+
 <body>
   <header>
-    <h1>Crear Pedido</h1>
+    <h1>{% if es_edicion %}Editar Pedido #{{ pedido_id }}{% else %}Crear Pedido{% endif %}</h1>
   </header>
-  <nav>
-    <ul class="navbar">
-      {% for categoria in categorias %}
-        <li class="{% if categoria == categoria_seleccionada %}active{% endif %}">
-          <a href="?categoria={{ categoria }}">{{ categoria }}</a>
-        </li>
-      {% endfor %}
-    </ul>
-  </nav>
-  <main>
-    <div class="content">
-      <div class="productos">
-        <form id="pedido-form" method="post">
-          {% csrf_token %}
-          {% if productos %}
-            <fieldset>
-              <legend>{{ categoria_seleccionada }}</legend>
-              <div class="productos-grid">
-                {% for producto in productos %}
-                  <div class="producto">
-                    <label for="id_productos_{{ producto.id }}">
-                      {{ producto.nombre }} - {{ producto.precio }}€
-                    </label>
-                    <div class="cantidad">
-                      <button type="button" class="btn-minus" onclick="decrementarCantidad({{ producto.id }})">-</button>
-                      <input type="number" name="cantidad_{{ producto.id }}" id="id_cantidad_{{ producto.id }}" min="0" value="0" readonly>
-                      <button type="button" class="btn-plus" onclick="incrementarCantidad({{ producto.id }})">+</button>
-                    </div>
-                  </div>
-                {% endfor %}
+
+  <main class="contenedor-pedido">
+    <!-- Sección izquierda: Formulario de pedido -->
+    <div class="pedido-seccion">
+
+      <form id="pedido-form" method="post"
+        action="{% if es_edicion %}{% url 'editar_pedido' pedido_id %}{% else %}{% url 'crear_pedido' %}{% endif %}">
+        {% csrf_token %}
+
+        <div class="mesa-info">
+          <h2>Detalles del Pedido</h2>
+
+          <div class="mesa-campo">
+            <label for="mesa"><strong>Mesa:</strong></label>
+            {{ form.mesa }}
+          </div>
+
+          <div class="clientes-campo">
+            <label for="numero_clientes"><strong>Número de Clientes:</strong></label>
+            {{ form.numero_clientes }}
+          </div>
+
+        </div>
+        <h3>Productos en el Pedido:</h3>
+        <ul id="pedido-lista"></ul> <!-- Aquí aparecerán los productos -->
+        <h3>Total del Pedido: <span id="total-pedido">0.00€</span></h3>
+
+        <button type="submit" class="boton-guardar">Guardar Pedido</button>
+    </div>
+
+    <div class="productos-seccion">
+      <label for="categoria-selector" class="filtro-label">Filtrar por categoría:</label>
+      <select id="categoria-selector" class="filtro-select" onchange="filtrarProductos()">
+        <option value="todas">Todas</option>
+        {% for categoria in categorias.keys %}
+        <option value="{{ categoria }}">{{ categoria }}</option>
+        {% endfor %}
+      </select>
+
+      <fieldset>
+        {% for categoria, productos in categorias.items %}
+        <div class="categoria-container" data-categoria="{{ categoria }}">
+          <h3>{{ categoria }}</h3>
+          <div class="productos-grid">
+            {% for producto in productos %}
+            <div class="producto">
+              <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}"
+                data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" style="display:none;"
+                onchange="toggleCantidad('{{ producto.id }}')">
+              <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+              <div class="cantidad-control">
+                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
+                <input type="number" name="cantidad_{{ producto.id }}" id="cantidad_{{ producto.id }}" min="0" value="0"
+                  readonly>
+                <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
               </div>
-            </fieldset>
-          {% else %}
-            <p>Seleccione una categoría para ver los productos.</p>
-          {% endif %}
-        </form>
-      </div>
-      <div class="resumen">
-        <h2>Resumen del Pedido</h2>
-        <form id="resumen-form">
-          <label for="mesa">Nombre de la Mesa:</label>
-          <input type="text" id="mesa" name="mesa" required>
-          <label for="comensales">Número de Comensales:</label>
-          <input type="number" id="comensales" name="comensales" min="1" required>
-          <ul id="resumen-pedido">
-            <!-- Aquí se mostrarán los productos añadidos al pedido -->
-          </ul>
-          <p id="total-pedido">Total: 0.00€</p>
-          <button type="submit" form="pedido-form">Crear Pedido</button>
-        </form>
-      </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </fieldset>
+    </div>
+
+    <input type="hidden" name="cantidades" id="cantidades">
+    </form>
     </div>
   </main>
+
   <script>
-    const resumenPedido = JSON.parse(localStorage.getItem('resumenPedido')) || {};
 
-    function incrementarCantidad(productoId) {
-      const input = document.getElementById('id_cantidad_' + productoId);
-      input.value = parseInt(input.value) + 1;
-      actualizarResumen(productoId);
+    function cambiarCantidad(id, cambio) {
+      const cantidadInput = document.getElementById('cantidad_' + id);
+      const checkbox = document.getElementById('producto_' + id);
+      let cantidad = parseInt(cantidadInput.value) + cambio;
+
+      if (cantidad < 0) {
+        cantidad = 0; // Evitar cantidades negativas
+      }
+
+      cantidadInput.value = cantidad;
+      checkbox.checked = cantidad > 0; // Marcar o desmarcar según la cantidad
+
+      actualizarPedido(); // Actualizar la lista de productos en "Detalles del Pedido"
     }
 
-    function decrementarCantidad(productoId) {
-      const input = document.getElementById('id_cantidad_' + productoId);
-      if (parseInt(input.value) > 0) {
-        input.value = parseInt(input.value) - 1;
-        actualizarResumen(productoId);
+    function actualizarPedido() {
+      const listaPedido = document.getElementById("pedido-lista");
+      const totalPedidoElemento = document.getElementById("total-pedido");
+      listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
+      let totalPedido = 0; // Inicializar total en 0
+
+      document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+        let cantidad = parseInt(input.value);
+        if (cantidad > 0) {
+          let productoId = input.id.replace("cantidad_", "");
+          let checkbox = document.getElementById('producto_' + productoId);
+          let nombreProducto = checkbox.dataset.nombre; // Obtener nombre del producto
+          let precioProducto = parseFloat(checkbox.dataset.precio); // Obtener precio del producto
+          let subtotal = precioProducto * cantidad; // Calcular subtotal del producto
+
+          // Agregar producto a la lista con su precio y cantidad
+          let item = document.createElement("li");
+          item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+          listaPedido.appendChild(item);
+
+          // Sumar al total del pedido
+          totalPedido += subtotal;
+        }
+      });
+
+      // Mostrar el total del pedido
+      totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+    }
+
+    function toggleCantidad(id) {
+      const checkbox = document.getElementById('producto_' + id);
+      const cantidadInput = document.getElementById('cantidad_' + id);
+      if (checkbox.checked) {
+        cantidadInput.style.display = 'inline';
+      } else {
+        cantidadInput.style.display = 'none';
       }
     }
 
-    function actualizarResumen(productoId) {
-      const input = document.getElementById('id_cantidad_' + productoId);
-      const cantidad = input ? parseInt(input.value) : resumenPedido[productoId].cantidad;
-      const nombreProducto = document.querySelector('label[for="id_productos_' + productoId + '"]') ? document.querySelector('label[for="id_productos_' + productoId + '"]').innerText.split(' - ')[0] : resumenPedido[productoId].nombre;
-      const precioProducto = document.querySelector('label[for="id_productos_' + productoId + '"]') ? parseFloat(document.querySelector('label[for="id_productos_' + productoId + '"]').innerText.split(' - ')[1].replace('€', '')) : resumenPedido[productoId].precio;
-      const resumen = document.getElementById('resumen-pedido');
-      let item = document.getElementById('resumen-item-' + productoId);
+    function filtrarProductos() {
+      const categoriaSeleccionada = document.getElementById("categoria-selector").value;
+      const categorias = document.querySelectorAll(".categoria-container");
 
-      if (cantidad > 0) {
-        resumenPedido[productoId] = { nombre: nombreProducto, cantidad: cantidad, precio: precioProducto };
-        if (!item) {
-          item = document.createElement('li');
-          item.id = 'resumen-item-' + productoId;
-          item.innerHTML = `${nombreProducto}: ${cantidad} x ${precioProducto.toFixed(2)}€ = ${(cantidad * precioProducto).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
-          resumen.appendChild(item);
+      categorias.forEach(categoria => {
+        if (categoriaSeleccionada === "todas" || categoria.dataset.categoria === categoriaSeleccionada) {
+          categoria.style.display = "block";
         } else {
-          item.innerHTML = `${nombreProducto}: ${cantidad} x ${precioProducto.toFixed(2)}€ = ${(cantidad * precioProducto).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
+          categoria.style.display = "none";
         }
-      } else {
-        delete resumenPedido[productoId];
-        if (item) {
-          resumen.removeChild(item);
+      });
+    }
+
+    document.getElementById('pedido-form').addEventListener('submit', function (event) {
+      const cantidades = {};
+      document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+        if (input.style.display !== 'none') {
+          cantidades[input.name.replace('cantidad_', '')] = input.value;
         }
-      }
+      });
+      document.getElementById('cantidades').value = JSON.stringify(cantidades);
+    });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const productosSeleccionados = {{ productos_seleccionados| safe
+    }};
+    const listaPedido = document.getElementById("pedido-lista");
+    const totalPedidoElemento = document.getElementById("total-pedido");
+    let totalPedido = 0;
 
-      localStorage.setItem('resumenPedido', JSON.stringify(resumenPedido));
-      actualizarTotal();
+    for (const [productoId, cantidad] of Object.entries(productosSeleccionados)) {
+      let checkbox = document.getElementById('producto_' + productoId);
+      let cantidadInput = document.getElementById('cantidad_' + productoId);
+
+      if (checkbox && cantidadInput) {
+        checkbox.checked = true;
+        cantidadInput.value = cantidad;
+
+        let nombreProducto = checkbox.dataset.nombre;
+        let precioProducto = parseFloat(checkbox.dataset.precio);
+        let subtotal = precioProducto * cantidad;
+
+        let item = document.createElement("li");
+        item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+        listaPedido.appendChild(item);
+
+        totalPedido += subtotal;
+      }
     }
 
-    function incrementarCantidadResumen(productoId) {
-      if (document.getElementById('id_cantidad_' + productoId)) {
-        const input = document.getElementById('id_cantidad_' + productoId);
-        input.value = parseInt(input.value) + 1;
-      } else {
-        resumenPedido[productoId].cantidad += 1;
-      }
-      actualizarResumen(productoId);
-    }
+    totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
 
-    function decrementarCantidadResumen(productoId) {
-      if (document.getElementById('id_cantidad_' + productoId)) {
-        const input = document.getElementById('id_cantidad_' + productoId);
-        if (parseInt(input.value) > 0) {
-          input.value = parseInt(input.value) - 1;
-        }
-      } else {
-        if (resumenPedido[productoId].cantidad > 0) {
-          resumenPedido[productoId].cantidad -= 1;
-        }
-      }
-      actualizarResumen(productoId);
-    }
-
-    function actualizarTotal() {
-      let total = 0;
-      for (const productoId in resumenPedido) {
-        total += resumenPedido[productoId].cantidad * resumenPedido[productoId].precio;
-      }
-      document.getElementById('total-pedido').innerText = `Total: ${total.toFixed(2)}€`;
-    }
-
-    function cargarResumen() {
-      const resumen = document.getElementById('resumen-pedido');
-      for (const productoId in resumenPedido) {
-        const item = document.createElement('li');
-        item.id = 'resumen-item-' + productoId;
-        item.innerHTML = `${resumenPedido[productoId].nombre}: ${resumenPedido[productoId].cantidad} x ${resumenPedido[productoId].precio.toFixed(2)}€ = ${(resumenPedido[productoId].cantidad * resumenPedido[productoId].precio).toFixed(2)}€ <button type="button" class="btn-minus" onclick="decrementarCantidadResumen(${productoId})">-</button> <button type="button" class="btn-plus" onclick="incrementarCantidadResumen(${productoId})">+</button>`;
-        resumen.appendChild(item);
-      }
-      actualizarTotal();
-    }
-
-    document.getElementById('pedido-form').addEventListener('submit', function(event) {
-      for (const productoId in resumenPedido) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'cantidad_' + productoId;
-        input.value = resumenPedido[productoId].cantidad;
-        this.appendChild(input);
-      }
-      const mesaInput = document.createElement('input');
-      mesaInput.type = 'hidden';
-      mesaInput.name = 'mesa';
-      mesaInput.value = document.getElementById('mesa').value;
-      this.appendChild(mesaInput);
-
-      const comensalesInput = document.createElement('input');
-      comensalesInput.type = 'hidden';
-      comensalesInput.name = 'comensales';
-      comensalesInput.value = document.getElementById('comensales').value;
-      this.appendChild(comensalesInput);
+    // Actualizar la lista de productos en el pedido al cambiar cantidades
+    document.querySelectorAll('.cantidad-control button').forEach(button => {
+      button.addEventListener('click', function () {
+        actualizarPedido();
+      });
+    });
     });
 
-    window.onload = cargarResumen;
+    function actualizarPedido() {
+      const listaPedido = document.getElementById("pedido-lista");
+      const totalPedidoElemento = document.getElementById("total-pedido");
+      listaPedido.innerHTML = ""; // Limpiar lista antes de actualizar
+      let totalPedido = 0;
+
+      document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+        let cantidad = parseInt(input.value);
+        if (cantidad > 0) {
+          let productoId = input.id.replace("cantidad_", "");
+          let checkbox = document.getElementById('producto_' + productoId);
+          let nombreProducto = checkbox.dataset.nombre;
+          let precioProducto = parseFloat(checkbox.dataset.precio);
+          let subtotal = precioProducto * cantidad;
+
+          let item = document.createElement("li");
+          item.textContent = `${nombreProducto} x${cantidad} - ${subtotal.toFixed(2)}€`;
+          listaPedido.appendChild(item);
+
+          totalPedido += subtotal;
+        }
+      });
+
+      totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+    }
   </script>
 </body>
 </html>

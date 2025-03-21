@@ -4,9 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
-from django.utils.timezone import now
+from .models import Pedido, Producto, PedidoProducto
+from django.utils.timezone import now, localtime, timedelta
+from django.db.models import Sum, F
+from decimal import Decimal
 
 
+import json
 
 from django.http import HttpResponse
 from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm, RegistroForm
@@ -117,43 +121,212 @@ def eliminar_producto(request, producto_id):
         return redirect('menu')
     return render(request, 'confirmacion_eliminar_producto.html', {'producto': producto})
 
+
+@login_required
+def lista_pedidos(request):
+    pedidos = Pedido.objects.filter(pagado=False).order_by('-fecha')  
+    pedidos_con_productos = []
+    for pedido in pedidos:
+        productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
+
+            # Calcular el total del pedido sumando (precio * cantidad)
+        total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
+
+        pedidos_con_productos.append({
+            'pedido': pedido,
+            'productos': productos_pedido,
+            'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
+        })
+
+    return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos})
+
+
+@login_required
+def lista_pedidos_cerrados(request):
+    filtro = request.GET.get('filtro', 'recientes')  # Obtener filtro de la URL (por defecto: "recientes")
+    fecha_inicio = request.GET.get('fecha_inicio')  # Obtener fecha de inicio (si se usa filtro por fecha)
+    fecha_fin = request.GET.get('fecha_fin')  # Obtener fecha de fin (si se usa filtro por fecha)
+
+    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')  # Pedidos pagados ordenados por fecha
+
+    # Filtrado según el criterio seleccionado
+    if filtro == "ultima_semana":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=7))
+    elif filtro == "ultimo_mes":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=30))
+    elif filtro == "ultimo_ano":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=365))
+    elif filtro == "por_fecha" and fecha_inicio and fecha_fin:
+        pedidos = pedidos.filter(fecha_cierre__date__range=[fecha_inicio, fecha_fin])
+    elif filtro == "por_mes":
+        mes = request.GET.get('mes')  # Mes en formato "YYYY-MM"
+        if mes:
+            pedidos = pedidos.filter(fecha_cierre__year=mes.split('-')[0], fecha_cierre__month=mes.split('-')[1])
+    elif filtro == "por_dia":
+        dia = request.GET.get('dia')  # Día en formato "YYYY-MM-DD"
+        if dia:
+            pedidos = pedidos.filter(fecha_cierre__date=dia)
+
+    # Convertir fecha de cierre a hora de Madrid
+    pedidos_con_precio = []
+    for pedido in pedidos:
+        total_pedido = pedido.pedidoproducto_set.aggregate(Sum('producto__precio'))['producto__precio__sum'] or 0
+        pedido.fecha_cierre = localtime(pedido.fecha_cierre)
+        pedidos_con_precio.append({'pedido': pedido, 'total_pedido': total_pedido, 'pedido.fecha_cierre': pedido.fecha_cierre})
+
+    return render(request, 'lista_pedidos_cerrados.html', {
+        'pedidos_con_precio': pedidos_con_precio,
+        'filtro_actual': filtro
+    })
+
+
+@login_required
+def detalles_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
+
+    total_pedido = sum(pp.producto.precio * pp.cantidad for pp in productos_pedido)
+
+    return render(request, 'detalles_pedido.html', {
+        'pedido': pedido,
+        'productos_pedido': productos_pedido,
+        'total_pedido': round(total_pedido, 2)
+    })
+
+@login_required
+def detalle_pedido_cerrado(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, pagado=True)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+
+    # Calcular el total correctamente: cantidad * precio
+    total_pedido = productos_pedido.aggregate(total=Sum(F('cantidad') * F('producto__precio')))['total'] or 0
+    total_pedido = round(Decimal(total_pedido), 2)  # Redondear a 2 decimales
+
+
+    pedido.fecha_cierre = localtime(pedido.fecha_cierre)
+
+    
+
+    return render(request, 'detalles_pedido_cerrado.html', {
+        'pedido': pedido,
+        'productos_pedido': productos_pedido,
+        'total_pedido': total_pedido,
+    })
+
+@login_required
+def eliminar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    
+    if request.method == 'POST':
+        pedido.delete()
+        return redirect('lista_pedidos')  # Redirige a la lista de pedidos después de eliminar
+
+    return render(request, 'confirmacion_eliminar_pedido.html', {'pedido': pedido})
+
+@login_required
+def editar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if request.method == 'POST':
+        form = PedidoForm(request.POST, instance=pedido)
+        if form.is_valid():
+            pedido = form.save(commit=False)
+            pedido.camarero = request.user  # Mantener el camarero original
+            pedido.save()
+
+            # Obtener los productos del formulario
+            productos = request.POST.getlist('productos')
+            cantidades = json.loads(request.POST.get('cantidades', '{}'))
+
+            for producto_id in productos:
+                producto = Producto.objects.get(id=producto_id)
+                cantidad = int(cantidades.get(str(producto.id), 1))
+
+                # Verificar si el producto ya está en el pedido
+                pedido_producto, creado = PedidoProducto.objects.get_or_create(pedido=pedido, producto=producto)
+
+                if creado:
+                    # Si es un nuevo producto, lo añadimos con la cantidad seleccionada
+                    pedido_producto.cantidad = cantidad
+                else:
+                    # Si ya estaba en el pedido, sumamos la nueva cantidad
+                    pedido_producto.cantidad += cantidad
+
+                pedido_producto.save()
+
+            return redirect('lista_pedidos')
+
+    else:
+        form = PedidoForm(instance=pedido)
+
+    # Obtener los productos actuales del pedido
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+    productos_seleccionados = {str(pp.producto.id): pp.cantidad for pp in productos_pedido}
+
+    # Organizar productos en categorías
+    productos = Producto.objects.all().order_by('categoria')
+    categorias = {}
+    for producto in productos:
+        if producto.categoria not in categorias:
+            categorias[producto.categoria] = []
+        categorias[producto.categoria].append(producto)
+
+    return render(request, 'crear_pedido.html', {
+        'form': form,
+        'categorias': categorias,
+        'productos_seleccionados': json.dumps(productos_seleccionados),
+        'es_edicion': True,
+        'pedido_id': pedido.id
+    })
+
+@login_required
+def eliminar_producto_pedido(request, pedido_id, producto_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+    producto = get_object_or_404(Producto, id=producto_id)
+
+    # Buscar si el producto está en el pedido
+    pedido_producto = PedidoProducto.objects.filter(pedido=pedido, producto=producto).first()
+
+    if pedido_producto:
+        # Si solo hay una unidad, eliminar el producto del pedido
+        if pedido_producto.cantidad == 1:
+            pedido_producto.delete()
+        else:
+            # Si hay más de una unidad, reducir la cantidad
+            pedido_producto.cantidad -= 1
+            pedido_producto.save()
+
+    return redirect('detalles_pedido', pedido_id=pedido.id)
+
+
 @login_required
 def crear_pedido(request):
-    categoria_seleccionada = request.GET.get('categoria', None)
     if request.method == 'POST':
         form = PedidoForm(request.POST)
         if form.is_valid():
             pedido = form.save(commit=False)
-            pedido.usuario = request.user
+            pedido.camarero = request.user  # Asignar el camarero automáticamente
             pedido.save()
-            form.save_m2m()  # Guardar la relación many-to-many
+            
+            productos = request.POST.getlist('productos')
+            cantidades = json.loads(request.POST.get('cantidades', '{}'))
 
-            # Guardar las cantidades de los productos
-            for producto in form.cleaned_data['productos']:
-                cantidad = form.cleaned_data.get(f'cantidad_{producto.id}', 1)
-                pedido.productos.add(producto, through_defaults={'cantidad': cantidad})
+            for producto_id in productos:
+                producto = Producto.objects.get(id=producto_id)
+                cantidad = cantidades.get(str(producto.id), 1)
+                PedidoProducto.objects.create(pedido=pedido, producto=producto, cantidad=cantidad)
 
-            messages.success(request, 'El pedido ha sido creado.')
-            return redirect('index')
+            return redirect('lista_pedidos')
     else:
         form = PedidoForm()
     
-    productos_por_categoria = {}
-    for producto in Producto.objects.all().order_by('categoria'):
-        if producto.categoria not in productos_por_categoria:
-            productos_por_categoria[producto.categoria] = []
-        productos_por_categoria[producto.categoria].append(producto)
-    
-    categorias = list(productos_por_categoria.keys())
-    productos = productos_por_categoria.get(categoria_seleccionada, []) if categoria_seleccionada else []
-
-    return render(request, 'crear_pedido.html', {
-        'form': form,
-        'productos_por_categoria': productos_por_categoria,
-        'categorias': categorias,
-        'productos': productos,
-        'categoria_seleccionada': categoria_seleccionada
-    })
+    productos = Producto.objects.all().order_by('categoria')
+    categorias = {}
+    for producto in productos:
+        if producto.categoria not in categorias:
+            categorias[producto.categoria] = []
+        categorias[producto.categoria].append(producto)
+    return render(request, 'crear_pedido.html', {'form': form, 'categorias': categorias})
 
 @login_required
 def stock(request):
@@ -186,6 +359,16 @@ def stock(request):
     })
 
 @login_required
+def pagar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if not pedido.pagado:  # Solo actualizar si aún no está pagado
+        pedido.pagado = True
+        pedido.fecha_cierre = now()  # Guardar la fecha de cierre
+        pedido.save()
+
+    return redirect('lista_pedidos')
+
 def registrar_entrada(request):
     # Cerrar cualquier registro activo antes de iniciar uno nuevo
     RegistroHorario.objects.filter(camarero=request.user, activo=True).update(activo=False, hora_salida=now())

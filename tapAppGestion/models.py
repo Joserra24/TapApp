@@ -31,36 +31,29 @@ class Producto(models.Model):
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     cantidad = models.PositiveIntegerField(default=0)  # Campo para la cantidad en el almacén
 
-
-
     def __str__(self):
         return self.nombre
 
 class Pedido(models.Model):
-    TIPO_PLATO = (
-        ('Entrante', 'Entrante'),
-        ('Primer plato', 'Primer plato'),
-        ('Segundo plato', 'Segundo plato'),
-    )
-    
-    mesa = models.CharField(max_length=50)  # Número o nombre de la mesa
+    mesa = models.CharField(max_length=50)  
     numero_clientes = models.PositiveIntegerField()
-    camarero = models.ForeignKey(User, on_delete=models.CASCADE)
-    fecha = models.DateTimeField(auto_now_add=True)
-    cerrado = models.BooleanField(default=False)  # Indica si el pedido está cerrado
+    productos = models.ManyToManyField(Producto, through='PedidoProducto')
+    camarero = models.ForeignKey(User, on_delete=models.CASCADE)  # Nuevo campo: camarero que toma el pedido
+    pagado = models.BooleanField(default=False)  # Nuevo campo
+    fecha = models.DateTimeField(default=now)  # Set default to current timestamp
+    fecha_cierre = models.DateTimeField(null=True, blank=True)  # Fecha cuando se pagó
+
 
     def __str__(self):
-        return f'Pedido {self.id} - Mesa {self.mesa}'
+        return f'Pedido {self.id} - Mesa {self.mesa} - {self.camarero.username}'
 
-class PedidoItem(models.Model):
-    pedido = models.ForeignKey(Pedido, related_name='items', on_delete=models.CASCADE)
+class PedidoProducto(models.Model):
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
-    nota = models.TextField(blank=True, null=True)
-    tipo_plato = models.CharField(max_length=20, choices=Pedido.TIPO_PLATO, blank=True, null=True)
 
     def __str__(self):
-        return f'{self.cantidad} x {self.producto.nombre}'
+        return f'{self.cantidad} x {self.producto.nombre} en Pedido {self.pedido.id}'
 
 
 class RegistroHorario(models.Model):
