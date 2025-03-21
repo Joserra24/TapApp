@@ -367,7 +367,15 @@ def pagar_pedido(request, pedido_id):
         pedido.fecha_cierre = now()  # Guardar la fecha de cierre
         pedido.save()
 
+        # Restar productos del stock
+        productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+        for item in productos_pedido:
+            producto = item.producto
+            producto.cantidad = max(producto.cantidad - item.cantidad, 0)  # evitar stock negativo
+            producto.save()
+
     return redirect('lista_pedidos')
+
 
 def registrar_entrada(request):
     # Cerrar cualquier registro activo antes de iniciar uno nuevo
