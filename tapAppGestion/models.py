@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.timezone import now 
+
 
 class Producto(models.Model):
     CATEGORIAS = (
@@ -36,6 +38,10 @@ class Pedido(models.Model):
     numero_clientes = models.PositiveIntegerField()
     productos = models.ManyToManyField(Producto, through='PedidoProducto')
     camarero = models.ForeignKey(User, on_delete=models.CASCADE)  # Nuevo campo: camarero que toma el pedido
+    pagado = models.BooleanField(default=False)  # Nuevo campo
+    fecha = models.DateTimeField(default=now)  # Set default to current timestamp
+    fecha_cierre = models.DateTimeField(null=True, blank=True)  # Fecha cuando se pagó
+
 
     def __str__(self):
         return f'Pedido {self.id} - Mesa {self.mesa} - {self.camarero.username}'

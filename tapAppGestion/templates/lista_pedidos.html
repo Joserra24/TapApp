@@ -41,9 +41,9 @@
         <p>No hay pedidos registrados.</p>
         {% endfor %}
     </div>
-</main>
+    <a href="{% url 'lista_pedidos_cerrados' %}" class="cerrados-btn">Ver Pedidos Cerrados</a>
 
-  <script src="{% static 'js/listaPedidos.js' %}"></script>
+</main>
 </body>
 </html>
 {% endblock %}

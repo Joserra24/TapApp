@@ -5,6 +5,7 @@ from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
 from .models import Pedido, Producto, PedidoProducto
+from django.utils.timezone import now, localtime
 import json
 
 from django.http import HttpResponse
@@ -115,15 +116,15 @@ def eliminar_producto(request, producto_id):
         return redirect('menu')
     return render(request, 'confirmacion_eliminar_producto.html', {'producto': producto})
 
+
 @login_required
 def lista_pedidos(request):
-    pedidos = Pedido.objects.all()
+    pedidos = Pedido.objects.filter(pagado=False).order_by('-fecha')  
     pedidos_con_productos = []
-
     for pedido in pedidos:
         productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
 
-         # Calcular el total del pedido sumando (precio * cantidad)
+            # Calcular el total del pedido sumando (precio * cantidad)
         total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
 
         pedidos_con_productos.append({
@@ -133,6 +134,26 @@ def lista_pedidos(request):
         })
 
     return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos})
+
+
+@login_required
+def lista_pedidos_cerrados(request):
+    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')  # Ordenar por fecha de cierre
+    pedidos_con_precio = []
+
+    for pedido in pedidos:
+        productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
+        
+            # Calcular el total del pedido sumando (precio * cantidad)
+        total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
+
+        pedidos_con_precio.append({
+            'pedido': pedido,
+            'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
+        })
+        
+    return render(request, 'lista_pedidos_cerrados.html', {'pedidos_con_precio': pedidos_con_precio})
+
 
 @login_required
 def detalles_pedido(request, pedido_id):
@@ -291,6 +312,18 @@ def stock(request):
         'productos_filtrados': productos_filtrados,
         'categoria_seleccionada': categoria_seleccionada
     })
+
+@login_required
+def pagar_pedido(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id)
+
+    if not pedido.pagado:  # Solo actualizar si aún no está pagado
+        pedido.pagado = True
+        pedido.fecha_cierre = now()  # Guardar la fecha de cierre
+        pedido.save()
+
+    return redirect('lista_pedidos')
+
 
 
 

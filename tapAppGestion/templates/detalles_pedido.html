@@ -24,8 +24,9 @@
                 {% for producto_pedido in productos_pedido %}
                 <li>
                     {{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€
-                    <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}" class="eliminar-btn-details">X</a>
-                </li> 
+                    <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}"
+                        class="eliminar-btn-details">X</a>
+                </li>
                 {% endfor %}
             </ul>
 
@@ -40,6 +41,12 @@
 
             <form action="{% url 'editar_pedido' pedido.id %}" method="get">
                 <button type="submit" class="editar-btn">Editar Pedido</button>
+            </form>
+
+            <form action="{% url 'pagar_pedido' pedido.id %}" method="post"
+                onsubmit="return confirm('¿Estás seguro de que quieres pagar este pedido? No se podrá editar después.');">
+                {% csrf_token %}
+                <button type="submit" class="pagar-btn">Pagar Pedido</button>
             </form>
 
             <form action="{% url 'eliminar_pedido' pedido.id %}" method="POST"

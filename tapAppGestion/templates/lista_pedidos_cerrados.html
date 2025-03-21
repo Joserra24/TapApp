@@ -1,0 +1,31 @@
+{% load tz %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pedidos Cerrados</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+
+<body>
+    <header class="header-pedidos">
+        <h1>Pedidos Cerrados</h1>
+        <a href="{% url 'lista_pedidos' %}" class="volver-btn">Volver a Pedidos Abiertos</a>
+    </header>
+
+    <main class="lista-pedidos-container">
+        {% for item in pedidos_con_precio %}
+        <div class="pedido-card">
+            <p><strong>Fecha de cierre:</strong> {% timezone "Europe/Madrid" %} {{ item.pedido.fecha_cierre|date:"d/m/Y H:i" }} {% endtimezone %}</p>
+            <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
+            <p><strong>Total:</strong> {{ item.total_pedido }}€</p>
+        </div>
+        {% empty %}
+        <p>No hay pedidos cerrados.</p>
+        {% endfor %}
+    </main>
+</body>
+
+</html>
