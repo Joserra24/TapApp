@@ -54,3 +54,20 @@ class PedidoProducto(models.Model):
 
     def __str__(self):
         return f'{self.cantidad} x {self.producto.nombre} en Pedido {self.pedido.id}'
+
+
+class RegistroHorario(models.Model):
+    camarero = models.ForeignKey(User, on_delete=models.CASCADE)
+    hora_entrada = models.DateTimeField(default=now)
+    hora_salida = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)  # Indica si el turno está activo
+
+    def calcular_duracion(self):
+        if self.hora_salida:
+            duracion = self.hora_salida - self.hora_entrada
+            segundos = int(duracion.total_seconds())  # Convertir a segundos enteros
+            return str(datetime.timedelta(seconds=segundos))  # Formato hh:mm:ss
+        return None
+
+    def __str__(self):
+        return f"{self.camarero.username} - {self.hora_entrada} a {self.hora_salida}"
