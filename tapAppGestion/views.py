@@ -5,7 +5,7 @@ from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
 from .models import Pedido, Producto, PedidoProducto
-from django.utils.timezone import now, localtime
+from django.utils.timezone import now, localtime, timedelta
 from django.db.models import Sum, F
 from decimal import Decimal
 
@@ -142,21 +142,41 @@ def lista_pedidos(request):
 
 @login_required
 def lista_pedidos_cerrados(request):
-    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')  # Ordenar por fecha de cierre
+    filtro = request.GET.get('filtro', 'recientes')  # Obtener filtro de la URL (por defecto: "recientes")
+    fecha_inicio = request.GET.get('fecha_inicio')  # Obtener fecha de inicio (si se usa filtro por fecha)
+    fecha_fin = request.GET.get('fecha_fin')  # Obtener fecha de fin (si se usa filtro por fecha)
+
+    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')  # Pedidos pagados ordenados por fecha
+
+    # Filtrado según el criterio seleccionado
+    if filtro == "ultima_semana":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=7))
+    elif filtro == "ultimo_mes":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=30))
+    elif filtro == "ultimo_ano":
+        pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=365))
+    elif filtro == "por_fecha" and fecha_inicio and fecha_fin:
+        pedidos = pedidos.filter(fecha_cierre__date__range=[fecha_inicio, fecha_fin])
+    elif filtro == "por_mes":
+        mes = request.GET.get('mes')  # Mes en formato "YYYY-MM"
+        if mes:
+            pedidos = pedidos.filter(fecha_cierre__year=mes.split('-')[0], fecha_cierre__month=mes.split('-')[1])
+    elif filtro == "por_dia":
+        dia = request.GET.get('dia')  # Día en formato "YYYY-MM-DD"
+        if dia:
+            pedidos = pedidos.filter(fecha_cierre__date=dia)
+
+    # Convertir fecha de cierre a hora de Madrid
     pedidos_con_precio = []
-
     for pedido in pedidos:
-        productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
-        
-            # Calcular el total del pedido sumando (precio * cantidad)
-        total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
+        total_pedido = pedido.pedidoproducto_set.aggregate(Sum('producto__precio'))['producto__precio__sum'] or 0
+        pedido.fecha_cierre = localtime(pedido.fecha_cierre)
+        pedidos_con_precio.append({'pedido': pedido, 'total_pedido': total_pedido, 'pedido.fecha_cierre': pedido.fecha_cierre})
 
-        pedidos_con_precio.append({
-            'pedido': pedido,
-            'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
-        })
-        
-    return render(request, 'lista_pedidos_cerrados.html', {'pedidos_con_precio': pedidos_con_precio})
+    return render(request, 'lista_pedidos_cerrados.html', {
+        'pedidos_con_precio': pedidos_con_precio,
+        'filtro_actual': filtro
+    })
 
 
 @login_required

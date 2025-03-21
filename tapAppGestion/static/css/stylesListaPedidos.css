@@ -235,6 +235,66 @@ body {
     cursor: pointer;
 }
 
+/* Contenedor del formulario de filtros */
+.filtro-form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 15px; /* Espacio entre elementos */
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    width: 90%;
+    max-width: 600px;
+}
+
+/* Estilos para las etiquetas */
+.filtro-form label {
+    font-weight: bold;
+    color: #333;
+}
+
+/* Estilos para el select */
+.filtro-form select {
+    padding: 8px 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Estilos para los inputs de fecha */
+.filtro-form input[type="date"],
+.filtro-form input[type="month"] {
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Estilos para el botón de filtrar */
+.filtro-form button {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 15px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.filtro-form button:hover {
+    background-color: #0056b3;
+}
+
+
 
 
 
