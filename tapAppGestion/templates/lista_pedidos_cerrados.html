@@ -1,6 +1,11 @@
+{% extends 'base.html' %}
+
 {% load tz %}
 
 {% load static %}
+
+{% block content %}
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -11,10 +16,11 @@
 </head>
 
 <body>
-    <header class="header-pedidos">
-        <h1>Pedidos Cerrados</h1>
-        <a href="{% url 'lista_pedidos' %}" class="volver-btn">Volver a Pedidos Abiertos</a>
-    </header>
+    <header>
+        <div>
+          <h1>Pedidos cerrados</h1>
+        </div>
+      </header>
 
     <!-- Filtros -->
     <form method="get" class="filtro-form">
@@ -85,3 +91,5 @@
 
 </body>
 </html>
+
+{% endblock %}
