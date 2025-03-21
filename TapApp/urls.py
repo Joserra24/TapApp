@@ -36,7 +36,7 @@ urlpatterns = [
     path('pedido_cerrado/<int:pedido_id>/', views.detalle_pedido_cerrado, name='detalle_pedido_cerrado'),
 
 
-s
+
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),
