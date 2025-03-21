@@ -26,6 +26,20 @@
                     {{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€
                     <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}"
                         class="eliminar-btn-details">X</a>
+                    
+                    <!-- Botón para mostrar campo de nota -->
+                    <button type="button" class="nota-btn" onclick="toggleNota({{ producto_pedido.id }})">+</button>
+                    
+                    <!-- Formulario para actualizar la nota -->
+                    <form method="post" action="{% url 'actualizar_nota_producto' pedido.id producto_pedido.id %}" class="nota-form" id="nota-form-{{ producto_pedido.id }}" style="display: none;">
+                        {% csrf_token %}
+                        <input type="text" name="nota" value="{{ producto_pedido.nota }}" placeholder="Añadir nota">
+                        <button type="submit">Guardar</button>
+                    </form>
+                    
+                    {% if producto_pedido.nota %}
+                        <p class="nota-texto">📝 {{ producto_pedido.nota }}</p>
+                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
@@ -56,6 +70,16 @@
             </form>
         </div>
     </main>
-</body>
 
+    <script>
+        function toggleNota(id) {
+            var form = document.getElementById("nota-form-" + id);
+            if (form.style.display === "none") {
+                form.style.display = "block";
+            } else {
+                form.style.display = "none";
+            }
+        }
+    </script>
+</body>
 </html>
