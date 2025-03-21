@@ -222,6 +222,19 @@ body {
     background-color: #218838;
 }
 
+.pedido-link {
+    text-decoration: none; /* Quita el subrayado del enlace */
+    color: inherit; /* Mantiene el color original del texto */
+    display: block;
+}
+
+/* Efecto al pasar el ratón por encima */
+.pedido-card:hover {
+    transform: scale(1.02); /* Efecto de agrandamiento */
+    transition: 0.3s;
+    cursor: pointer;
+}
+
 
 
 

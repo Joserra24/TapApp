@@ -1,0 +1,34 @@
+{% load tz %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Detalles del Pedido Cerrado</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesListaPedidos.css' %}">
+</head>
+
+<body>
+    <header class="header-pedidos">
+        <h1>Detalles del Pedido #{{ pedido.id }}</h1>
+        <a href="{% url 'lista_pedidos_cerrados' %}" class="volver-btn">Volver a Pedidos Cerrados</a>
+    </header>
+
+    <main class="pedido-detalles-container">
+        <div class="pedido-card">
+            <p><strong>Fecha de cierre:</strong> {{ pedido.fecha_cierre|timezone:"Europe/Madrid"|date:"d/m/Y H:i" }}</p>
+            <p><strong>Mesa:</strong> {{ pedido.mesa }}</p>
+            <p><strong>Número de Clientes:</strong> {{ pedido.numero_clientes }}</p>
+            <h3>Productos:</h3>
+            <div class="productos-lista">
+                {% for producto_pedido in productos_pedido %}
+                <p>{{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€</p>
+                {% endfor %}
+            </div>
+            <p><strong>Total del Pedido:</strong> {{ total_pedido|floatformat:2 }}€</p>
+        </div>
+    </main>
+</body>
+
+</html>

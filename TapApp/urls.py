@@ -33,9 +33,10 @@ urlpatterns = [
     path('eliminar_producto_pedido/<int:pedido_id>/<int:producto_id>/', views.eliminar_producto_pedido, name='eliminar_producto_pedido'),
     path('pagar_pedido/<int:pedido_id>/', views.pagar_pedido, name='pagar_pedido'),
     path('pedidos_cerrados/', views.lista_pedidos_cerrados, name='lista_pedidos_cerrados'),
+    path('pedido_cerrado/<int:pedido_id>/', views.detalle_pedido_cerrado, name='detalle_pedido_cerrado'),
 
 
-
+s
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),

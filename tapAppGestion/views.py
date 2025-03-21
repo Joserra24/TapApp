@@ -6,6 +6,10 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import Pedido, Producto, PedidoProducto
 from django.utils.timezone import now, localtime
+from django.db.models import Sum, F
+from decimal import Decimal
+
+
 import json
 
 from django.http import HttpResponse
@@ -166,6 +170,26 @@ def detalles_pedido(request, pedido_id):
         'pedido': pedido,
         'productos_pedido': productos_pedido,
         'total_pedido': round(total_pedido, 2)
+    })
+
+@login_required
+def detalle_pedido_cerrado(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, pagado=True)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+
+    # Calcular el total correctamente: cantidad * precio
+    total_pedido = productos_pedido.aggregate(total=Sum(F('cantidad') * F('producto__precio')))['total'] or 0
+    total_pedido = round(Decimal(total_pedido), 2)  # Redondear a 2 decimales
+
+
+    pedido.fecha_cierre = localtime(pedido.fecha_cierre)
+
+    
+
+    return render(request, 'detalles_pedido_cerrado.html', {
+        'pedido': pedido,
+        'productos_pedido': productos_pedido,
+        'total_pedido': total_pedido,
     })
 
 @login_required

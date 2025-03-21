@@ -17,11 +17,13 @@
 
     <main class="lista-pedidos-container">
         {% for item in pedidos_con_precio %}
-        <div class="pedido-card">
-            <p><strong>Fecha de cierre:</strong> {% timezone "Europe/Madrid" %} {{ item.pedido.fecha_cierre|date:"d/m/Y H:i" }} {% endtimezone %}</p>
-            <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
-            <p><strong>Total:</strong> {{ item.total_pedido }}€</p>
-        </div>
+        <a href="{% url 'detalle_pedido_cerrado' item.pedido.id %}" class="pedido-link">
+            <div class="pedido-card">
+                <p><strong>Fecha de cierre:</strong> {% timezone "Europe/Madrid" %} {{ item.pedido.fecha_cierre|date:"d/m/Y H:i" }} {% endtimezone %}</p>
+                <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
+                <p><strong>Total:</strong> {{ item.total_pedido }}€</p>
+            </div>
+        </a>
         {% empty %}
         <p>No hay pedidos cerrados.</p>
         {% endfor %}
