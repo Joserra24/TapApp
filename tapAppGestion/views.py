@@ -13,7 +13,8 @@ from decimal import Decimal
 import json
 
 from django.http import HttpResponse
-from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm
+from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm, RegistroForm
+from .models import Producto, Pedido, RegistroHorario
 
 
 @login_required
@@ -368,6 +369,33 @@ def pagar_pedido(request, pedido_id):
 
     return redirect('lista_pedidos')
 
+def registrar_entrada(request):
+    # Cerrar cualquier registro activo antes de iniciar uno nuevo
+    RegistroHorario.objects.filter(camarero=request.user, activo=True).update(activo=False, hora_salida=now())
+
+    # Crear un nuevo registro con hora de entrada actual
+    RegistroHorario.objects.create(camarero=request.user)
+    
+    messages.success(request, "Hora de entrada registrada. Cronómetro iniciado.")
+    return redirect('control_horarios')
+
+@login_required
+def registrar_salida(request):
+    registro = RegistroHorario.objects.filter(camarero=request.user, activo=True).first()
+    if registro:
+        registro.hora_salida = now()
+        registro.activo = False  # Marcar el turno como finalizado
+        registro.save()
+        messages.success(request, "Hora de salida registrada. Cronómetro reiniciado.")
+    else:
+        messages.error(request, "No tienes un turno activo.")
+
+    return redirect('control_horarios')
+
+@login_required
+def control_horarios(request):
+    registros = RegistroHorario.objects.filter(camarero=request.user).order_by('-hora_entrada')
+    return render(request, 'control_horarios.html', {'registros': registros})
 
 
 

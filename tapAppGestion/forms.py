@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import Pedido, Producto, PedidoProducto
+from .models import Producto, Pedido, RegistroHorario
 
 class ProductoForm(forms.ModelForm):
     class Meta:
@@ -115,6 +115,11 @@ class ActualizarStockForm(forms.ModelForm):
     class Meta:
         model = Producto
         fields = ['cantidad']
+
+class RegistroHorarioForm(forms.ModelForm):
+    class Meta:
+        model = RegistroHorario
+        fields = ['hora_entrada', 'hora_salida']
         
         
 
