@@ -405,5 +405,18 @@ def control_horarios(request):
     registros = RegistroHorario.objects.filter(camarero=request.user).order_by('-hora_entrada')
     return render(request, 'control_horarios.html', {'registros': registros})
 
+@login_required
+def actualizar_nota_producto(request, pedido_id, producto_pedido_id):
+    pedido_producto = get_object_or_404(PedidoProducto, id=producto_pedido_id, pedido_id=pedido_id)
+
+    if request.method == "POST":
+        nueva_nota = request.POST.get("nota", "").strip()
+        pedido_producto.nota = nueva_nota
+        pedido_producto.save()
+        messages.success(request, "Nota actualizada correctamente.")
+
+    return redirect('detalles_pedido', pedido_id=pedido_id)
+
+
 
 

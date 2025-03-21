@@ -51,6 +51,8 @@ class PedidoProducto(models.Model):
     pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE)
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
+    nota = models.TextField(blank=True, null=True)  # Nuevo campo para notas
+
 
     def __str__(self):
         return f'{self.cantidad} x {self.producto.nombre} en Pedido {self.pedido.id}'
