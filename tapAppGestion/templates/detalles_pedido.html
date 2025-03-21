@@ -33,7 +33,7 @@
                     <!-- Formulario para actualizar la nota -->
                     <form method="post" action="{% url 'actualizar_nota_producto' pedido.id producto_pedido.id %}" class="nota-form" id="nota-form-{{ producto_pedido.id }}" style="display: none;">
                         {% csrf_token %}
-                        <input type="text" name="nota" value="{{ producto_pedido.nota }}" placeholder="Añadir nota">
+                        <input type="text" name="nota" value="{{ producto_pedido.nota|default:'' }}" placeholder="Añadir nota">
                         <button type="submit">Guardar</button>
                     </form>
                     
