@@ -16,7 +16,10 @@
 
 <body>
   <header>
-    <h1>Lista de Pedidos</h1>
+    <div>
+      <h1>Lista de Pedidos</h1>
+      <a href="{% url 'crear_pedido' %}" class="floating-btn" style="text-decoration: none;">+</a>
+    </div>
   </header>
 
   <main>
@@ -43,10 +46,6 @@
       <p>No hay pedidos registrados.</p>
       {% endfor %}
     </div>
-    <form action="{% url 'lista_pedidos_cerrados' %}">
-      <button type="submit" class="volver-btn">Ver Pedidos Cerrados</button>
-    </form>
-
   </main>
 </body>
 
