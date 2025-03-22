@@ -48,6 +48,8 @@
     </div>
 
     <div class="productos-seccion">
+      <label for="buscador" class="filtro-label">Buscar producto:</label>
+      <input type="text" id="buscador" placeholder="Buscar por nombre..." class="filtro-select" onkeyup="buscarProductos()">
       <label for="categoria-selector" class="filtro-label">Filtrar por categoría:</label>
       <select id="categoria-selector" class="filtro-select" onchange="filtrarProductos()">
         <option value="todas">Todas</option>
@@ -164,6 +166,7 @@
       });
       document.getElementById('cantidades').value = JSON.stringify(cantidades);
     });
+    
   </script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -227,6 +230,29 @@
       });
 
       totalPedidoElemento.textContent = `${totalPedido.toFixed(2)}€`;
+    }
+  </script>
+  <script>
+    function buscarProductos() {
+      const input = document.getElementById("buscador").value.toLowerCase().trim();
+      const productos = document.querySelectorAll(".producto");
+  
+      productos.forEach(producto => {
+        const nombre = producto.querySelector("span").textContent.toLowerCase();
+        producto.style.display = nombre.includes(input) ? "flex" : "none";
+      });
+  
+      // Mostrar u ocultar contenedores de categoría según resultados
+      document.querySelectorAll(".categoria-container").forEach(categoria => {
+        const productosVisibles = categoria.querySelectorAll(".producto");
+        let algunoVisible = false;
+  
+        productosVisibles.forEach(p => {
+          if (p.style.display !== "none") algunoVisible = true;
+        });
+  
+        categoria.style.display = algunoVisible ? "block" : "none";
+      });
     }
   </script>
 </body>
