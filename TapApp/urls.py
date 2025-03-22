@@ -55,6 +55,7 @@ urlpatterns = [
     path('entrada/', views.registrar_entrada, name='registrar_entrada'),
     path('salida/', views.registrar_salida, name='registrar_salida'),
     path('control_horarios/', views.control_horarios, name='control_horarios'),
+    path('control_horarios/exportar_pdf/', views.exportar_horarios_pdf, name='exportar_horarios_pdf'),
 
 
 ]

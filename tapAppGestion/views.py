@@ -8,9 +8,18 @@ from .models import Pedido, Producto, PedidoProducto
 from django.utils.timezone import now, localtime, timedelta
 from django.db.models import Sum, F
 from decimal import Decimal
+from django.utils.dateparse import parse_date
+from django.template.loader import get_template
+from django.http import HttpResponse
+from xhtml2pdf import pisa
+from .models import RegistroHorario
+from collections import defaultdict
 
 
+
+import calendar
 import json
+
 
 from django.http import HttpResponse
 from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm, RegistroForm
@@ -486,9 +495,80 @@ def registrar_salida(request):
     return redirect('control_horarios')
 
 @login_required
+def exportar_horarios_pdf(request):
+    registros = RegistroHorario.objects.filter(camarero=request.user).order_by('hora_entrada')
+
+    # Nombres de meses en español (indexados por mes)
+    nombres_meses_es = [
+        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ]
+
+    # Agrupar por (año, mes)
+    registros_por_mes = defaultdict(list)
+    total_por_mes = defaultdict(int)
+    total_segundos = 0
+
+    for r in registros:
+        duracion = r.calcular_duracion()
+        if duracion:
+            h, m, s = map(int, str(duracion).split(":"))
+            segundos = h * 3600 + m * 60 + s
+            total_segundos += segundos
+
+            key = (r.hora_entrada.year, r.hora_entrada.month)
+            registros_por_mes[key].append(r)
+            total_por_mes[key] += segundos
+
+    total_duracion = str(timedelta(seconds=total_segundos))
+
+    # Crear lista de grupos ordenados y traducidos
+    registros_ordenados = []
+    for (year, month) in sorted(registros_por_mes):
+        nombre_mes = f"{nombres_meses_es[month]} {year}"
+        registros_ordenados.append({
+            'mes': nombre_mes,
+            'registros': registros_por_mes[(year, month)],
+            'total_mes': str(timedelta(seconds=total_por_mes[(year, month)]))
+        })
+
+    template = get_template('horarios_pdf.html')
+    html = template.render({
+        'registros_ordenados': registros_ordenados,
+        'total_duracion': total_duracion,
+        'usuario': request.user,
+        'fecha_generacion': now()
+
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="horarios.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('Error al generar el PDF')
+    return response
+
+@login_required
 def control_horarios(request):
-    registros = RegistroHorario.objects.filter(camarero=request.user).order_by('-hora_entrada')
-    return render(request, 'control_horarios.html', {'registros': registros})
+    registros = RegistroHorario.objects.filter(camarero=request.user)
+
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin')
+
+    if fecha_inicio:
+        registros = registros.filter(hora_entrada__date__gte=parse_date(fecha_inicio))
+    if fecha_fin:
+        registros = registros.filter(hora_entrada__date__lte=parse_date(fecha_fin))
+
+    registros = registros.order_by('-hora_entrada')
+
+    return render(request, 'control_horarios.html', {
+        'registros': registros,
+        'fecha_inicio': fecha_inicio,
+        'fecha_fin': fecha_fin
+    })
 
 @login_required
 def actualizar_nota_producto(request, pedido_id, producto_pedido_id):
