@@ -384,7 +384,10 @@ def stock(request):
         productos_por_categoria[producto.categoria].append(producto)
     
     categorias = list(productos_por_categoria.keys())
-    productos_filtrados = productos_por_categoria.get(categoria_seleccionada, []) if categoria_seleccionada else []
+    if categoria_seleccionada:
+        productos_filtrados = productos_por_categoria.get(categoria_seleccionada, [])
+    else:
+        productos_filtrados = [p for sublist in productos_por_categoria.values() for p in sublist]
     
     return render(request, 'stock.html', {
         'productos_por_categoria': productos_por_categoria,
