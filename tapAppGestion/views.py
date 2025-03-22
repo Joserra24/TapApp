@@ -385,8 +385,6 @@ def stock(request):
     })
 
 
-from decimal import Decimal
-
 @login_required
 def pagar_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
@@ -398,32 +396,34 @@ def pagar_pedido(request, pedido_id):
 
         productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
 
-        # Barril compartido: nombre => litros por unidad
+        # Productos con descuento por litros
         conversion_litros = {
-            # Barril con alcohol
             "Cerveza Con": 0.2,
             "Tubo Con": 0.25,
             "Cortada": 0.275,
             "Cañón": 0.350,
-
-            # Barril sin alcohol
             "Cerveza Sin": 0.2,
             "Tubo Sin": 0.25,
-
-            # Radler - independiente
             "Radler": 0.2,
         }
 
         grupo_con = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
         grupo_sin = ["Cerveza Sin", "Tubo Sin"]
 
+        vinos = [
+            "Ramón Bilbao Crianza", "Dulce Eva", "Ramón Bilbao Rueda", "Árabe",
+            "Viña Pelina", "Habla del Silencio", "Alaude",
+            "Ramón Bilbao Reserva", "Marqués de Riscal", "Resalso"
+        ]
+
         for item in productos_pedido:
             producto = item.producto
             cantidad = item.cantidad
 
+            # 🔻 Descuento por litros (cervezas y radler)
             if producto.nombre in conversion_litros:
-                litros_por_unidad = conversion_litros[producto.nombre]
-                litros_a_restar = Decimal(str(litros_por_unidad)) * cantidad
+                litros_por_unidad = Decimal(str(conversion_litros[producto.nombre]))
+                litros_a_restar = litros_por_unidad * cantidad
 
                 if producto.nombre in grupo_con:
                     grupo = Producto.objects.filter(nombre__in=grupo_con)
@@ -442,6 +442,19 @@ def pagar_pedido(request, pedido_id):
                         p.litros_disponibles = nuevo_valor
                         p.save()
 
+            # 🍷 Descuento por copa de vino → resta litros en botella
+            elif producto.nombre in vinos:
+                litros_actuales = producto.litros_disponibles or Decimal("0")
+                total_a_restar = Decimal("0.15") * cantidad
+                producto.litros_disponibles = max(litros_actuales - total_a_restar, Decimal("0"))
+                producto.save()
+
+            # 🍾 Descuento por unidad al vender botella
+            elif producto.nombre.startswith("Botella "):
+                producto.cantidad = max(producto.cantidad - cantidad, 0)
+                producto.save()
+
+            # 🧊 Otros productos normales (por unidad)
             elif not producto.es_barril:
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
                 producto.save()
