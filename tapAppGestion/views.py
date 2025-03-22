@@ -331,16 +331,42 @@ def crear_pedido(request):
 @login_required
 def stock(request):
     categoria_seleccionada = request.GET.get('categoria', None)
-    
+
+    # Grupos de productos que comparten barril
+    barril_grupo_1 = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
+    barril_grupo_2 = ["Cerveza Sin", "Tubo Sin"]
+
     if request.method == 'POST':
         producto_id = request.POST.get('producto_id')
         categoria_seleccionada = request.POST.get('categoria_seleccionada')
         producto = Producto.objects.get(id=producto_id)
-        form = ActualizarStockForm(request.POST, instance=producto)
-        if form.is_valid():
-            form.save()
-            return redirect(f'/stock?categoria={categoria_seleccionada}')
-    
+
+        if producto.es_barril:
+            litros = request.POST.get('litros_disponibles', None)
+            if litros is not None:
+                try:
+                    litros_float = float(litros)
+
+                    if producto.nombre in barril_grupo_1:
+                        relacionados = Producto.objects.filter(nombre__in=barril_grupo_1)
+                    elif producto.nombre in barril_grupo_2:
+                        relacionados = Producto.objects.filter(nombre__in=barril_grupo_2)
+                    else:
+                        relacionados = [producto]
+
+                    for p in relacionados:
+                        p.litros_disponibles = litros_float
+                        p.save()
+
+                except ValueError:
+                    pass  # Valor no numérico, ignoramos
+        else:
+            form = ActualizarStockForm(request.POST, instance=producto)
+            if form.is_valid():
+                form.save()
+
+        return redirect(f'/stock?categoria={categoria_seleccionada}')
+
     productos = Producto.objects.exclude(categoria__in=['Cafés', 'Pan']).order_by('categoria')
     productos_por_categoria = {}
     for producto in productos:
@@ -358,21 +384,67 @@ def stock(request):
         'categoria_seleccionada': categoria_seleccionada
     })
 
+
+from decimal import Decimal
+
 @login_required
 def pagar_pedido(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
 
-    if not pedido.pagado:  # Solo actualizar si aún no está pagado
+    if not pedido.pagado:
         pedido.pagado = True
-        pedido.fecha_cierre = now()  # Guardar la fecha de cierre
+        pedido.fecha_cierre = now()
         pedido.save()
 
-        # Restar productos del stock
         productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+
+        # Barril compartido: nombre => litros por unidad
+        conversion_litros = {
+            # Barril con alcohol
+            "Cerveza Con": 0.2,
+            "Tubo Con": 0.25,
+            "Cortada": 0.275,
+            "Cañón": 0.350,
+
+            # Barril sin alcohol
+            "Cerveza Sin": 0.2,
+            "Tubo Sin": 0.25,
+
+            # Radler - independiente
+            "Radler": 0.2,
+        }
+
+        grupo_con = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
+        grupo_sin = ["Cerveza Sin", "Tubo Sin"]
+
         for item in productos_pedido:
             producto = item.producto
-            producto.cantidad = max(producto.cantidad - item.cantidad, 0)  # evitar stock negativo
-            producto.save()
+            cantidad = item.cantidad
+
+            if producto.nombre in conversion_litros:
+                litros_por_unidad = conversion_litros[producto.nombre]
+                litros_a_restar = Decimal(str(litros_por_unidad)) * cantidad
+
+                if producto.nombre in grupo_con:
+                    grupo = Producto.objects.filter(nombre__in=grupo_con)
+                    barril_ref = grupo.filter(nombre="Cerveza Con").first()
+                elif producto.nombre in grupo_sin:
+                    grupo = Producto.objects.filter(nombre__in=grupo_sin)
+                    barril_ref = grupo.filter(nombre="Cerveza Sin").first()
+                else:
+                    grupo = [producto]
+                    barril_ref = producto
+
+                if barril_ref:
+                    litros_actuales = barril_ref.litros_disponibles or Decimal("0")
+                    nuevo_valor = max(litros_actuales - litros_a_restar, Decimal("0"))
+                    for p in grupo:
+                        p.litros_disponibles = nuevo_valor
+                        p.save()
+
+            elif not producto.es_barril:
+                producto.cantidad = max(producto.cantidad - cantidad, 0)
+                producto.save()
 
     return redirect('lista_pedidos')
 
