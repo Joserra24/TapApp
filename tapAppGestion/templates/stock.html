@@ -5,42 +5,54 @@
 {% block title %}Stock - Discovering Tentudia{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/stylesStock.css' %}">
-    <h2>Stock de Productos</h2>
-    
-    <!-- Barra de navegación de categorías -->
-    <nav class="navbar">
-        <ul class="navbar">
-            {% for categoria in categorias %}
-                <li class="{% if categoria == categoria_seleccionada %}active{% endif %}">
-                    <a href="?categoria={{ categoria }}">{{ categoria }}</a>
-                </li>
-            {% endfor %}
-        </ul>
-    </nav>
-    
-    <div class="productos">
-        {% if productos_filtrados %}
-            {% for producto in productos_filtrados %}
-                <div class="categoria">
-                    <form method="post" action="{% url 'stock' %}">
-                        {% csrf_token %}
-                        <div class="producto">
-                            <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
-                            <label for="cantidad_{{ producto.id }}">Cantidad:</label>
-                            <input type="number" name="cantidad" id="cantidad_{{ producto.id }}" value="{{ producto.cantidad }}" min="0">
-                            <input type="hidden" name="producto_id" value="{{ producto.id }}">
-                            <input type="hidden" name="categoria_seleccionada" value="{{ categoria_seleccionada }}">
-                            <button type="submit">Actualizar</button>
-                        </div>
-                        {% if producto.cantidad < 10 %}
-                            <p class="reponer">Necesita reponer</p>
-                        {% endif %}
-                    </form>
-                </div>
-            {% endfor %}
-        {% else %}
-            <p class="no-productos">Seleccione una categoría para ver los productos.</p>
-        {% endif %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/stylesStock.css' %}">
+<h2>Stock de Productos</h2>
+
+<!-- Barra de navegación de categorías -->
+<nav class="navbar">
+    <ul class="navbar">
+        {% for categoria in categorias %}
+        <li class="{% if categoria == categoria_seleccionada %}active{% endif %}">
+            <a href="?categoria={{ categoria }}">{{ categoria }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+
+<div class="productos">
+    {% if productos_filtrados %}
+    {% for producto in productos_filtrados %}
+    <div class="categoria">
+        <form method="post" action="{% url 'stock' %}">
+            {% csrf_token %}
+            <div class="producto">
+                <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+                {% if producto.es_barril %}
+                <label for="litros_{{ producto.id }}">Litros:</label>
+                <input type="number" step="0.1" name="litros_disponibles" id="litros_{{ producto.id }}"
+                    value="{{ producto.litros_disponibles }}" min="0">
+                {% else %}
+                <label for="cantidad_{{ producto.id }}">Cantidad:</label>
+                <input type="number" name="cantidad" id="cantidad_{{ producto.id }}" value="{{ producto.cantidad }}"
+                    min="0">
+                {% endif %}
+
+                <input type="hidden" name="producto_id" value="{{ producto.id }}">
+                <input type="hidden" name="categoria_seleccionada" value="{{ categoria_seleccionada }}">
+                <button type="submit">Actualizar</button>
+            </div>
+            {% if producto.es_barril %}
+                {% if producto.litros_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
+                {% endif %}
+            {% else %}
+                {% if producto.cantidad < 10 %} <p class="reponer">Necesita reponer</p>
+                    {% endif %}
+            {% endif %}
+        </form>
     </div>
-    {% endblock %}
+    {% endfor %}
+    {% else %}
+    <p class="no-productos">Seleccione una categoría para ver los productos.</p>
+    {% endif %}
+</div>
+{% endblock %}
