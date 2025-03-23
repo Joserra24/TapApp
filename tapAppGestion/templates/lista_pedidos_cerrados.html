@@ -18,16 +18,16 @@
 <body>
     <header>
         <div>
-          <h1>Pedidos cerrados</h1>
+            <h1>Pedidos cerrados</h1>
         </div>
-      </header>
+    </header>
 
     <!-- Filtros -->
     <form method="get" class="filtro-form">
         <label for="filtro">Filtrar por:</label>
         <select name="filtro" id="filtro">
-            <option value="recientes" {% if filtro_actual == "recientes" %}selected{% endif %}>Más recientes</option>
-            <option value="ultima_semana" {% if filtro_actual == "ultima_semana" %}selected{% endif %}>Última semana</option>
+            <option value="recientes" {% if filtro_actual == "recientes" %}selected{% endif %}>
+                <option value="ultima_semana" {% if filtro_actual == "ultima_semana" %}selected{% endif %}>Última semana</option>
             <option value="ultimo_mes" {% if filtro_actual == "ultimo_mes" %}selected{% endif %}>Último mes</option>
             <option value="ultimo_ano" {% if filtro_actual == "ultimo_ano" %}selected{% endif %}>Último año</option>
             <option value="por_fecha" {% if filtro_actual == "por_fecha" %}selected{% endif %}>Por fecha</option>
@@ -64,6 +64,12 @@
                 <p><strong>Fecha de cierre:</strong> {{ item.pedido.fecha_cierre|timezone:"Europe/Madrid"|date:"d/m/Y H:i" }}</p>
                 <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
                 <p><strong>Total:</strong> {{ item.total_pedido|floatformat:2 }}€</p>
+                <form action="{% url 'eliminar_pedido_cerrado' item.pedido.id %}" method="post"
+                    onsubmit="return confirm('¿Estás seguro de que quieres eliminar este pedido cerrado?');">
+                    {% csrf_token %}
+                    <button type="submit" class="eliminar-btn">Eliminar</button>
+                </form>
+
             </div>
         </a>
         {% empty %}
@@ -90,6 +96,7 @@
     </script>
 
 </body>
+
 </html>
 
 {% endblock %}

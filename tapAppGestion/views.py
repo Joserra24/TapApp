@@ -307,6 +307,15 @@ def eliminar_producto_pedido(request, pedido_id, producto_id):
 
     return redirect('detalles_pedido', pedido_id=pedido.id)
 
+@login_required
+def eliminar_pedido_cerrado(request, pedido_id):
+    pedido = get_object_or_404(Pedido, id=pedido_id, pagado=True)
+
+    if request.method == "POST":
+        pedido.delete()
+        return redirect('lista_pedidos_cerrados')  # Asegúrate que este es el name correcto
+
+    return redirect('lista_pedidos_cerrados')
 
 @login_required
 def crear_pedido(request):
