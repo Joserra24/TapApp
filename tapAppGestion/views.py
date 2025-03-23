@@ -132,7 +132,7 @@ def eliminar_producto(request, producto_id):
 
 
 @login_required
-def lista_pedidos(request):
+def lista_pedidos(request, pedido_id=None):
     pedidos = Pedido.objects.filter(pagado=False).order_by('-fecha')  
     pedidos_con_productos = []
     for pedido in pedidos:
@@ -147,7 +147,7 @@ def lista_pedidos(request):
             'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
         })
 
-    return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos})
+    return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos,  'pedido_reciente_id': pedido_id})
 
 
 @login_required
@@ -334,7 +334,7 @@ def crear_pedido(request):
                 cantidad = cantidades.get(str(producto.id), 1)
                 PedidoProducto.objects.create(pedido=pedido, producto=producto, cantidad=cantidad)
 
-            return redirect('lista_pedidos')
+            return redirect('lista_pedidos_confirmado', pedido_id=pedido.id)
     else:
         form = PedidoForm()
     
@@ -593,6 +593,35 @@ def actualizar_nota_producto(request, pedido_id, producto_pedido_id):
         messages.success(request, "Nota actualizada correctamente.")
 
     return redirect('detalles_pedido', pedido_id=pedido_id)
+
+@login_required
+def generar_ticket_pdf(request, pedido_id):
+    pedido = Pedido.objects.get(id=pedido_id)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+
+    # Categorías que NO deben aparecer en el ticket de cocina
+    categorias_excluidas = [
+        "Cervezas", "Bebida/Refresco", "Copa Vino", "Botellas Vino", "Bebidas Alcohólicas", "Desayunos", "Postres"
+    ]
+
+    productos_comida = [
+        p for p in productos_pedido if p.producto.categoria not in categorias_excluidas
+    ]
+
+    template = get_template('ticket_cocina.html')
+    html = template.render({
+        'pedido': pedido,
+        'productos_comida': productos_comida,
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ticket_mesa_{pedido.mesa}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse('❌ Error al generar el ticket de cocina')
+    return response
 
 
 
