@@ -75,6 +75,9 @@
                   readonly>
                 <button type="button" onclick="cambiarCantidad('{{ producto.id }}', 1)">+</button>
               </div>
+              <div class="nota-control">
+                <input type="text" name="nota_{{ producto.id }}" placeholder="Nota (opcional)">
+              </div>              
             </div>
             {% endfor %}
           </div>

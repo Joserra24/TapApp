@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        h2 { text-align: center; margin-bottom: 10px; }
+        .info { margin-bottom: 15px; }
+        ul { list-style: none; padding: 0; }
+        li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h2>🧾 Ticket de Cocina</h2>
+
+    <div class="info">
+        <p><strong>Mesa:</strong> {{ pedido.mesa }}</p>
+        <p><strong>Número de Clientes:</strong> {{ pedido.numero_clientes }}</p>
+        <p><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <hr>
+
+    <ul>
+        {% for item in productos_comida %}
+        <li>
+            <strong>{{ item.cantidad }}x</strong> {{ item.producto.nombre }}
+            {% if item.nota %}
+                <br><span style="margin-left: 10px; font-style: italic;">* {{ item.nota }}</span>
+            {% endif %}
+        </li>
+        {% empty %}
+        <li style="font-style: italic;">No hay productos de cocina en este pedido.</li>
+        {% endfor %}
+    </ul>
+    
+</body>
+</html>

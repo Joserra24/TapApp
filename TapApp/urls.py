@@ -36,6 +36,8 @@ urlpatterns = [
     path('pedido_cerrado/<int:pedido_id>/', views.detalle_pedido_cerrado, name='detalle_pedido_cerrado'),
     path('pedido/<int:pedido_id>/producto/<int:producto_pedido_id>/nota/', views.actualizar_nota_producto, name='actualizar_nota_producto'),
     path('pedidos_cerrados/eliminar/<int:pedido_id>/', views.eliminar_pedido_cerrado, name='eliminar_pedido_cerrado'),
+    path('pedidos/confirmado/<int:pedido_id>/', views.lista_pedidos, name='lista_pedidos_confirmado'),
+
 
 
 
@@ -58,6 +60,8 @@ urlpatterns = [
     path('salida/', views.registrar_salida, name='registrar_salida'),
     path('control_horarios/', views.control_horarios, name='control_horarios'),
     path('control_horarios/exportar_pdf/', views.exportar_horarios_pdf, name='exportar_horarios_pdf'),
+    path('pedidos/<int:pedido_id>/ticket_pdf/', views.generar_ticket_pdf, name='generar_ticket_pdf'),
+
 
 
 ]
