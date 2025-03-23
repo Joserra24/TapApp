@@ -634,7 +634,10 @@ def generar_ticket_cliente(request, pedido_id):
     pedido = Pedido.objects.get(id=pedido_id)
     productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
 
-    total = sum(pp.producto.precio * pp.cantidad for pp in productos_pedido)
+    total = 0
+    for item in productos_pedido:
+        item.subtotal = item.cantidad * item.producto.precio
+        total += item.subtotal
 
     template = get_template('ticket_cliente.html')
     html = template.render({
@@ -651,7 +654,6 @@ def generar_ticket_cliente(request, pedido_id):
     if pisa_status.err:
         return HttpResponse("❌ Error al generar el ticket del cliente")
     return response
-
 
 
 
