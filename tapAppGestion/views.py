@@ -332,7 +332,13 @@ def crear_pedido(request):
             for producto_id in productos:
                 producto = Producto.objects.get(id=producto_id)
                 cantidad = cantidades.get(str(producto.id), 1)
-                PedidoProducto.objects.create(pedido=pedido, producto=producto, cantidad=cantidad)
+                nota = request.POST.get(f'nota_{producto.id}', '').strip()
+                PedidoProducto.objects.create(
+                    pedido=pedido,
+                    producto=producto,
+                    cantidad=cantidad,
+                    nota=nota if nota else None
+                )
 
             return redirect('lista_pedidos_confirmado', pedido_id=pedido.id)
     else:

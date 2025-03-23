@@ -27,10 +27,16 @@
 
     <ul>
         {% for item in productos_comida %}
-        <li><strong>{{ item.cantidad }}x</strong> {{ item.producto.nombre }}</li>
+        <li>
+            <strong>{{ item.cantidad }}x</strong> {{ item.producto.nombre }}
+            {% if item.nota %}
+                <br><span style="margin-left: 10px; font-style: italic;">* {{ item.nota }}</span>
+            {% endif %}
+        </li>
         {% empty %}
         <li style="font-style: italic;">No hay productos de cocina en este pedido.</li>
         {% endfor %}
     </ul>
+    
 </body>
 </html>
