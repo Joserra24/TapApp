@@ -13,8 +13,22 @@
         <!-- Contenedor del título -->
         <h1 class="pedido-titulo">Detalles del Pedido #{{ pedido.id }}</h1>
 
+        <!-- Icono de impresora fijo en la parte superior derecha -->
+    <a href="{% url 'generar_ticket_cliente' pedido.id %}" target="_blank" title="Imprimir ticket"
+       style="
+           position: absolute;
+           top: 17px;
+           right: 440px;
+           font-size: 30px;
+           text-decoration: none;
+           color: black;
+       ">
+        🖨️
+    </a>
+
         <!-- Contenedor de la información del pedido -->
         <div class="pedido-card">
+            
             <h2>Mesa: {{ pedido.mesa }}</h2>
             <p><strong>Número de Clientes:</strong> {{ pedido.numero_clientes }}</p>
             <p><strong>Camarero:</strong> {{ pedido.camarero.username }}</p>
@@ -26,19 +40,21 @@
                     {{ producto_pedido.producto.nombre }} - {{ producto_pedido.cantidad }} uds - {{ producto_pedido.producto.precio }}€
                     <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}"
                         class="eliminar-btn-details">X</a>
-                    
+
                     <!-- Botón para mostrar campo de nota -->
                     <button type="button" class="nota-btn" onclick="toggleNota({{ producto_pedido.id }})">+</button>
-                    
+
                     <!-- Formulario para actualizar la nota -->
-                    <form method="post" action="{% url 'actualizar_nota_producto' pedido.id producto_pedido.id %}" class="nota-form" id="nota-form-{{ producto_pedido.id }}" style="display: none;">
+                    <form method="post" action="{% url 'actualizar_nota_producto' pedido.id producto_pedido.id %}"
+                        class="nota-form" id="nota-form-{{ producto_pedido.id }}" style="display: none;">
                         {% csrf_token %}
-                        <input type="text" name="nota" value="{{ producto_pedido.nota|default:'' }}" placeholder="Añadir nota">
+                        <input type="text" name="nota" value="{{ producto_pedido.nota|default:'' }}"
+                            placeholder="Añadir nota">
                         <button type="submit">Guardar</button>
                     </form>
-                    
+
                     {% if producto_pedido.nota %}
-                        <p class="nota-texto">📝 {{ producto_pedido.nota }}</p>
+                    <p class="nota-texto">📝 {{ producto_pedido.nota }}</p>
                     {% endif %}
                 </li>
                 {% endfor %}
@@ -82,4 +98,5 @@
         }
     </script>
 </body>
+
 </html>

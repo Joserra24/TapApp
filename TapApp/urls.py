@@ -61,6 +61,8 @@ urlpatterns = [
     path('control_horarios/', views.control_horarios, name='control_horarios'),
     path('control_horarios/exportar_pdf/', views.exportar_horarios_pdf, name='exportar_horarios_pdf'),
     path('pedidos/<int:pedido_id>/ticket_pdf/', views.generar_ticket_pdf, name='generar_ticket_pdf'),
+    path('pedidos/<int:pedido_id>/ticket_cliente/', views.generar_ticket_cliente, name='generar_ticket_cliente'),
+
 
 
 

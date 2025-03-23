@@ -629,6 +629,29 @@ def generar_ticket_pdf(request, pedido_id):
         return HttpResponse('❌ Error al generar el ticket de cocina')
     return response
 
+@login_required
+def generar_ticket_cliente(request, pedido_id):
+    pedido = Pedido.objects.get(id=pedido_id)
+    productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
+
+    total = sum(pp.producto.precio * pp.cantidad for pp in productos_pedido)
+
+    template = get_template('ticket_cliente.html')
+    html = template.render({
+        'pedido': pedido,
+        'productos_pedido': productos_pedido,
+        'total': total,
+    })
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="ticket_cliente_mesa_{pedido.mesa}.pdf"'
+
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    if pisa_status.err:
+        return HttpResponse("❌ Error al generar el ticket del cliente")
+    return response
+
 
 
 
