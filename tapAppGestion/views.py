@@ -601,7 +601,7 @@ def generar_ticket_pdf(request, pedido_id):
 
     # Categorías que NO deben aparecer en el ticket de cocina
     categorias_excluidas = [
-        "Cervezas", "Bebida/Refresco", "Copa Vino", "Botellas Vino", "Bebidas Alcohólicas", "Desayunos", "Postres"
+        "Cervezas", "Bebida/Refresco", "Copa Vino", "Botellas Vino", "Bebidas Alcohólicas", "Desayunos"
     ]
 
     productos_comida = [
