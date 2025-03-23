@@ -3,44 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; font-size: 12px; }
-    h2 { text-align: center; margin-bottom: 10px; }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th, td { border-bottom: 1px dashed #ccc; padding: 5px; text-align: left; }
-    .total { text-align: right; font-weight: bold; padding-top: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 20px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .info {
+      margin-bottom: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      border-bottom: 1px dashed #ccc;
+      padding: 5px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f3f3f3;
+      font-weight: bold;
+    }
+
+    .total {
+      text-align: right;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
 
-<h2>Ticket de Cliente</h2>
+  <h2>Ticket para Cliente</h2>
 
-<p><strong>Mesa:</strong> {{ pedido.mesa }}</p>
-<p><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
-<hr>
+  <div class="info">
+    <p><strong>Mesa:</strong> {{ pedido.mesa }}</p>
+    <p><strong>Camarero:</strong> {{ pedido.camarero.username }}</p>
+    <p><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+  </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Producto</th>
-      <th>Cant.</th>
-      <th>Precio</th>
-      <th>Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in productos_pedido %}
-    <tr>
-      <td>{{ item.producto.nombre }}</td>
-      <td>{{ item.cantidad }}</td>
-      <td>{{ item.producto.precio|floatformat:2 }} €</td>
-      <td>{{ item.cantidad|floatformat:0|add:""|floatformat:0|default:"0"|floatformat:"2"|add:"" }}{{ item.producto.precio|floatformat:2|add:""|floatformat:"2" }} €
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Producto</th>
+        <th>Cant.</th>
+        <th>Precio</th>
+        <th>Subtotal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in productos_pedido %}
+      <tr>
+        <td>{{ item.producto.nombre }}</td>
+        <td>{{ item.cantidad }}</td>
+        <td>{{ item.producto.precio|floatformat:2 }} €</td>
+        <td>{{ item.subtotal|floatformat:2 }} €</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
-<p class="total">TOTAL: {{ total|floatformat:2 }} €</p>
+  <p class="total">TOTAL: {{ total|floatformat:2 }} €</p>
 
 </body>
 </html>
