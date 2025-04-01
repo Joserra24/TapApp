@@ -384,6 +384,18 @@ def stock(request):
 
                 except ValueError:
                     pass  # Valor no numérico, ignoramos
+        
+        # 2) NUEVO: si la categoría es “Carnes Ibéricas” o “Pescados”, manejamos kilos
+        elif producto.categoria in ["Carnes Ibéricas", "Pescados"]:
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    producto.kilos_disponibles = kilos_float
+                    producto.save()
+                except ValueError:
+                    pass
+
         else:
             form = ActualizarStockForm(request.POST, instance=producto)
             if form.is_valid():
@@ -443,6 +455,9 @@ def pagar_pedido(request, pedido_id):
             "Ramón Bilbao Reserva", "Marqués de Riscal", "Resalso"
         ]
 
+        RESTA_KILOS = Decimal("0.3")
+
+
         for item in productos_pedido:
             producto = item.producto
             cantidad = item.cantidad
@@ -479,6 +494,13 @@ def pagar_pedido(request, pedido_id):
             # 🍾 Descuento por unidad al vender botella
             elif producto.nombre.startswith("Botella "):
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
+                producto.save()
+
+            # 4) Descuento para “Carnes Ibéricas” y “Pescados” → 300 g (0.3 kg) por cada unidad vendida
+            elif producto.categoria in ["Carnes Ibéricas", "Pescados"]:
+                kilos_actuales = producto.kilos_disponibles or Decimal("0")
+                total_a_restar = RESTA_KILOS * cantidad  # 0.3 kg * cantidad
+                producto.kilos_disponibles = max(kilos_actuales - total_a_restar, Decimal("0"))
                 producto.save()
 
             # 🧊 Otros productos normales (por unidad)

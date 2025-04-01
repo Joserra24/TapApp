@@ -26,15 +26,15 @@
         <form method="post" action="{% url 'stock' %}">
             {% csrf_token %}
             <div class="producto">
-                <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
+                <span>{{ producto.nombre }}</span>
                 {% if producto.es_barril %}
                 <label for="litros_{{ producto.id }}">Litros:</label>
                 <input type="number" step="0.1" lang="en" inputmode="decimal" name="litros_disponibles"
                     id="litros_{{ producto.id }}" value="{{ producto.litros_disponibles|stringformat:'0.2f' }}" min="0">
-
-                <script>
-                    console.log("Producto: {{ producto.nombre }} - Litros disponibles: {{ producto.litros_disponibles|floatformat:2 }}");
-                </script>
+                {% elif producto.categoria == "Carnes Ibéricas" or producto.categoria == "Pescados"  %}
+                <label for="kilos_{{ producto.id }}">Kgs:</label>
+                <input type="number" step="0.1" lang="en" inputmode="decimal" name="kilos_disponibles"
+                    id="kilos_{{ producto.id }}" value="{{ producto.kilos_disponibles|stringformat:'0.2f' }}" min="0">
                 {% else %}
                 <label for="cantidad_{{ producto.id }}">Cantidad:</label>
                 <input type="number" name="cantidad" id="cantidad_{{ producto.id }}" value="{{ producto.cantidad }}"
@@ -46,12 +46,18 @@
                 <button type="submit">Actualizar</button>
             </div>
             {% if producto.es_barril %}
-            {% if producto.litros_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
+                {% if producto.litros_disponibles <= 5 %}
+                    <p class="reponer">Necesita reponer</p>
                 {% endif %}
-                {% else %}
-                {% if producto.cantidad < 10 %} <p class="reponer">Necesita reponer</p>
-                    {% endif %}
-                    {% endif %}
+            {% elif producto.categoria == "Carnes Ibéricas" or producto.categoria == "Pescados" %}
+                {% if producto.kilos_disponibles <= 5 %}
+                    <p class="reponer">Necesita reponer</p>
+                {% endif %}
+            {% else %}
+                {% if producto.cantidad < 10 %}
+                    <p class="reponer">Necesita reponer</p>
+                {% endif %}
+            {% endif %}
         </form>
     </div>
     {% endfor %}

@@ -32,6 +32,8 @@ class Producto(models.Model):
     cantidad = models.PositiveIntegerField(default=0)  # Campo para la cantidad en el almacén
     es_barril = models.BooleanField(default=False)  # Nuevo campo
     litros_disponibles = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+    kilos_disponibles = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
+
 
     def __str__(self):
         return self.nombre
