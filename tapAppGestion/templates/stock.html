@@ -41,6 +41,19 @@
                 <input type="number" step="0.1" lang="en" inputmode="decimal" name="kilos_disponibles"
                     id="kilos_{{ producto.id }}" value="{{ producto.kilos_disponibles|stringformat:'0.2f' }}" min="0">
 
+                {% elif producto.categoria == "Entrantes" and producto.nombre == "Pollo Kentaky" or producto.nombre == "Patatas Braviolis" or producto.nombre == "Jamón" or producto.nombre == "Queso" or producto.nombre == "Caña Lomo" or producto.nombre == "Ensalada Atún" or producto.nombre == "Ensalada Rulo Cabra" %}
+                    <!-- KG para ciertos entrantes --> 
+                    <label for="kilos_{{ producto.id }}">Kgs:</label>
+                    <input type="number" step="0.1" lang="en" inputmode="decimal"
+                           name="kilos_disponibles" id="kilos_{{ producto.id }}"
+                           value="{{ producto.kilos_disponibles|stringformat:'0.2f' }}" min="0">
+
+                {% elif producto.categoria == "Entrantes" and producto.nombre == "Croquetas Gourmet" or producto.nombre == "Croquetas Caseras" %}
+                    <!-- Unidades para Croquetas Gourmet / Caseras -->
+                    <label for="cantidad_{{ producto.id }}">Cantidad:</label>
+                    <input type="number" name="cantidad" id="cantidad_{{ producto.id }}"
+                           value="{{ producto.cantidad }}" min="0">
+
                 {% else %}
                 <label for="cantidad_{{ producto.id }}">Cantidad:</label>
                 <input type="number" name="cantidad" id="cantidad_{{ producto.id }}" value="{{ producto.cantidad }}"
@@ -54,7 +67,7 @@
             {% if producto.es_barril %}
             {% if producto.litros_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
                 {% endif %}
-                {% elif producto.categoria == "Carnes Ibéricas" or producto.categoria == "Pescados" %}
+                {% elif producto.categoria == "Carnes Ibéricas" or producto.categoria == "Pescados" or producto.categoria == "Entrantes" %}
                 {% if producto.kilos_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
                     {% endif %}
                     {% else %}
