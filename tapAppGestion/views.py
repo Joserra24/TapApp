@@ -359,6 +359,7 @@ def stock(request):
     # Grupos de productos que comparten barril
     barril_grupo_1 = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
     barril_grupo_2 = ["Cerveza Sin", "Tubo Sin"]
+    BOCADILLOS_GRUPO = ["Serranito", "Montado de Lomo"]
 
     if request.method == 'POST':
         producto_id = request.POST.get('producto_id')
@@ -393,6 +394,23 @@ def stock(request):
                     kilos_float = float(kilos)
                     producto.kilos_disponibles = kilos_float
                     producto.save()
+                except ValueError:
+                    pass
+
+        # 3) Bocadillos => Serranito / Montado => actualizar el grupo entero
+        elif producto.categoria == "Bocadillos" and producto.nombre in BOCADILLOS_GRUPO:
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    # Actualizar TODOS los productos en la lista BOCADILLOS_GRUPO
+                    relacionados = Producto.objects.filter(
+                        categoria="Bocadillos",
+                        nombre__in=BOCADILLOS_GRUPO
+                    )
+                    for p in relacionados:
+                        p.kilos_disponibles = kilos_float
+                        p.save()
                 except ValueError:
                     pass
 
@@ -457,6 +475,16 @@ def pagar_pedido(request, pedido_id):
 
         RESTA_KILOS = Decimal("0.3")
 
+        bocadillos_descuento = {
+            "Serranito": Decimal("0.2"),       # 200 g
+            "Montado de Lomo": Decimal("0.1"), # 100 g
+        } 
+
+        BOCADILLOS_GRUPO = ["Serranito", "Montado de Lomo"]  # Comparten el mismo stock
+  
+        total_bocadillos = Decimal("0")
+
+
 
         for item in productos_pedido:
             producto = item.producto
@@ -503,11 +531,30 @@ def pagar_pedido(request, pedido_id):
                 producto.kilos_disponibles = max(kilos_actuales - total_a_restar, Decimal("0"))
                 producto.save()
 
+            elif producto.nombre in BOCADILLOS_GRUPO:
+                # No lo restamos aún directamente, sino que lo acumulamos
+                descuento_por_unidad = bocadillos_descuento[producto.nombre]  # 0.2 o 0.1
+                total_bocadillos += descuento_por_unidad * cantidad
+
             # 🧊 Otros productos normales (por unidad)
             elif not producto.es_barril:
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
                 producto.save()
 
+         # 3) Ahora, tras el bucle, aplicamos la resta acumulada a todo el grupo BOCADILLOS_GRUPO
+        if total_bocadillos > 0:
+            # Tomamos como referencia uno de ellos (por ejemplo, Serranito) para leer su stock actual
+            bocadillo_ref = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO).first()
+            if bocadillo_ref:
+                kilos_actuales = bocadillo_ref.kilos_disponibles or Decimal("0")
+                nuevo_valor = max(kilos_actuales - total_bocadillos, Decimal("0"))
+
+                # Asignamos ese nuevo valor a todos los productos del grupo
+                grupo_bocadillos = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO)
+                for p in grupo_bocadillos:
+                    p.kilos_disponibles = nuevo_valor
+                    p.save()
+                    
     return redirect('lista_pedidos')
 
 
