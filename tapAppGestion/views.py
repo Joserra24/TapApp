@@ -414,6 +414,37 @@ def stock(request):
                 except ValueError:
                     pass
 
+         # 4) Entrantes en kilogramos
+        #    a) Productos individuales: Pollo Kentaky, Patatas Braviolis, Jamón, Queso, Caña Lomo
+        elif producto.categoria == "Entrantes" and (producto.nombre == "Pollo Kentaky" or producto.nombre == "Patatas Braviolis" or producto.nombre == "Jamón" or producto.nombre == "Queso" or producto.nombre == "Caña Lomo"):
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    producto.kilos_disponibles = kilos_float
+                    producto.save()
+                except ValueError:
+                    pass
+
+         #    b) Ensaladas que comparten stock: Ensalada de Atún y Ensalada Rulo Cabra
+        elif producto.categoria == "Entrantes" and (producto.nombre == "Ensalada Atún" or producto.nombre == "Ensalada Rulo Cabra"):
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    # Actualizamos ambas ensaladas en grupo:
+                    relacionados = Producto.objects.filter(categoria="Entrantes", nombre__in=["Ensalada Atún", "Ensalada Rulo Cabra"])
+                    for p in relacionados:
+                        p.kilos_disponibles = kilos_float
+                        p.save()
+                except ValueError:
+                    pass
+
+         # 5) Entrantes en unidades: Croquetas Gourmet / Croquetas Caseras
+        elif producto.categoria == "Entrantes" and (producto.nombre == "Croquetas Gourmet" or producto.nombre == "Croquetas Caseras"):
+            form = ActualizarStockForm(request.POST, instance=producto)
+            if form.is_valid():
+                form.save()
         else:
             form = ActualizarStockForm(request.POST, instance=producto)
             if form.is_valid():
@@ -484,7 +515,17 @@ def pagar_pedido(request, pedido_id):
   
         total_bocadillos = Decimal("0")
 
+        ENTRANTES_KILOS = ["Pollo Kentaky", "Patatas Braviolis", "Jamón", "Queso", "Caña Lomo"]
 
+        ENSALADAS_GRUPO = ["Ensalada Atún", "Ensalada Rulo Cabra"]
+
+        total_ensaladas = Decimal("0")
+
+
+        croquetas_descuento = {
+            "Croquetas Caseras": 10,
+            "Croquetas Gourmet": 10
+        }
 
         for item in productos_pedido:
             producto = item.producto
@@ -524,6 +565,27 @@ def pagar_pedido(request, pedido_id):
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
                 producto.save()
 
+            # 4) ENTRANTES KILOS (individuales) => 0.3 kg cada uno
+            elif producto.nombre in ENTRANTES_KILOS:
+                kilos_actuales = producto.kilos_disponibles or Decimal("0")
+                total_a_restar = Decimal("0.3") * cantidad
+                producto.kilos_disponibles = max(kilos_actuales - total_a_restar, Decimal("0"))
+                producto.save()
+
+             # 5) ENSALADAS (grupo) => 0.3 kg
+            elif producto.nombre in ENSALADAS_GRUPO:
+                # Acumulamos la cantidad vendida de ensaladas
+                total_a_restar = Decimal("0.3") * cantidad
+                total_ensaladas += total_a_restar
+
+             # 6) CROQUETAS => descuenta 10 unidades por 1 croqueta
+            elif producto.nombre in croquetas_descuento:
+                units_current = producto.cantidad
+                # si vendes X croquetas => descuenta X*10
+                total_unidades_a_restar = croquetas_descuento[producto.nombre] * cantidad
+                producto.cantidad = max(units_current - total_unidades_a_restar, 0)
+                producto.save()
+
             # 4) Descuento para “Carnes Ibéricas” y “Pescados” → 300 g (0.3 kg) por cada unidad vendida
             elif producto.categoria in ["Carnes Ibéricas", "Pescados"]:
                 kilos_actuales = producto.kilos_disponibles or Decimal("0")
@@ -552,6 +614,19 @@ def pagar_pedido(request, pedido_id):
                 # Asignamos ese nuevo valor a todos los productos del grupo
                 grupo_bocadillos = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO)
                 for p in grupo_bocadillos:
+                    p.kilos_disponibles = nuevo_valor
+                    p.save()
+
+        if total_ensaladas > 0:
+            # Tomamos un producto de referencia (p.ej. "Ensalada Atún") para leer su stock actual
+            ensalada_ref = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO).first()
+            if ensalada_ref:
+                kilos_actuales = ensalada_ref.kilos_disponibles or Decimal("0")
+                nuevo_valor = max(kilos_actuales - total_ensaladas, Decimal("0"))
+
+                # Asignar este valor a todos los del grupo
+                grupo_ensaladas = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO)
+                for p in grupo_ensaladas:
                     p.kilos_disponibles = nuevo_valor
                     p.save()
                     
