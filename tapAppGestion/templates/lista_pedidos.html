@@ -27,8 +27,8 @@
       {% for item in pedidos_con_productos %}
       <a href="{% url 'detalles_pedido' item.pedido.id %}" class="pedido-link">
         <div class="pedido-card">
-          <h2>Pedido #{{ item.pedido.id }}</h2>
-          <p class="pedido-info"><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
+          <h2>Mesa {{ item.pedido.mesa }}</h2>
+          <p class="pedido-info"><strong>Pedido:</strong> #{{ item.pedido.id }}</p>
           <p class="pedido-info"><strong>Número de Clientes:</strong> {{ item.pedido.numero_clientes }}</p>
           <p class="pedido-info"><strong>Camarero:</strong> {{ item.pedido.camarero.username }}</p>
 

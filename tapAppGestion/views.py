@@ -445,6 +445,38 @@ def stock(request):
             form = ActualizarStockForm(request.POST, instance=producto)
             if form.is_valid():
                 form.save()
+
+        # 6) Cafés agrupados en kilogramos
+        elif producto.categoria == "Cafés" and producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    relacionados = Producto.objects.filter(
+                        categoria="Cafés",
+                        nombre__in=["Café Leche", "Café Solo", "Café Cortado"]
+                    )
+                    for p in relacionados:
+                        p.kilos_disponibles = kilos_float
+                        p.save()
+                except ValueError:
+                    pass
+
+        elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
+            kilos = request.POST.get('kilos_disponibles', None)
+            if kilos is not None:
+                try:
+                    kilos_float = float(kilos)
+                    relacionados = Producto.objects.filter(
+                        categoria="Cafés",
+                        nombre__in=["Desca Leche", "Desca Cortado", "Desca Solo"]
+                    )
+                    for p in relacionados:
+                        p.kilos_disponibles = kilos_float
+                        p.save()
+                except ValueError:
+                    pass
+  
         else:
             form = ActualizarStockForm(request.POST, instance=producto)
             if form.is_valid():
@@ -452,7 +484,7 @@ def stock(request):
 
         return redirect(f'/stock?categoria={categoria_seleccionada}')
 
-    productos = Producto.objects.exclude(categoria__in=['Cafés', 'Pan']).order_by('categoria')
+    productos = Producto.objects.exclude(categoria__in=['Pan']).order_by('categoria')
     productos_por_categoria = {}
     for producto in productos:
         if producto.categoria not in productos_por_categoria:
@@ -597,6 +629,31 @@ def pagar_pedido(request, pedido_id):
                 # No lo restamos aún directamente, sino que lo acumulamos
                 descuento_por_unidad = bocadillos_descuento[producto.nombre]  # 0.2 o 0.1
                 total_bocadillos += descuento_por_unidad * cantidad
+
+            # 7) Descuento para “Cafés” → 8 g (0.008 kg) por cada unidad vendida (grupo común)
+            elif producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
+                RESTA_CAFE = Decimal("0.008")
+                kilos_actuales = producto.kilos_disponibles or Decimal("0")
+                total_a_restar = RESTA_CAFE * cantidad
+                nuevo_valor = max(kilos_actuales - total_a_restar, Decimal("0"))
+
+                grupo = Producto.objects.filter(nombre__in=["Café Leche", "Café Solo", "Café Cortado"])
+                for p in grupo:
+                    p.kilos_disponibles = nuevo_valor
+                    p.save()
+
+            # 8) Descuento para “Descafeinados” → 8 g (0.008 kg) por cada unidad vendida (grupo común)
+            elif producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
+                RESTA_DESCAFEINADO = Decimal("0.008")
+                kilos_actuales = producto.kilos_disponibles or Decimal("0")
+                total_a_restar = RESTA_DESCAFEINADO * cantidad
+                nuevo_valor = max(kilos_actuales - total_a_restar, Decimal("0"))
+
+                grupo = Producto.objects.filter(nombre__in=["Desca Leche", "Desca Cortado", "Desca Solo"])
+                for p in grupo:
+                    p.kilos_disponibles = nuevo_valor
+                    p.save()
+
 
             # 🧊 Otros productos normales (por unidad)
             elif not producto.es_barril:
@@ -898,6 +955,32 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
     elif producto.categoria == "Bocadillos" and (producto.nombre == "Serranito" or producto.nombre == "Montado de Lomo"):
         deduction = bocadillos_descuento[producto.nombre] * cantidad_a_pagar
         total_bocadillos += deduction
+
+        # 7) Descuento para “Cafés” → 8 g (0.008 kg) por unidad vendida (grupo común)
+    elif producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
+        RESTA_CAFE = Decimal("0.008")
+        kilos_actuales = producto.kilos_disponibles or Decimal("0")
+        total_a_restar = RESTA_CAFE * cantidad_a_pagar
+        nuevo_valor = max(kilos_actuales - total_a_restar, Decimal("0"))
+
+        grupo = Producto.objects.filter(nombre__in=["Café Leche", "Café Solo", "Café Cortado"])
+        for p in grupo:
+            p.kilos_disponibles = nuevo_valor
+            p.save()
+
+    # 8) Descuento para “Descafeinados” → 8 g (0.008 kg) por unidad vendida (grupo común)
+    elif producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
+        RESTA_DESCAFEINADO = Decimal("0.008")
+        kilos_actuales = producto.kilos_disponibles or Decimal("0")
+        total_a_restar = RESTA_DESCAFEINADO * cantidad_a_pagar
+        nuevo_valor = max(kilos_actuales - total_a_restar, Decimal("0"))
+
+        grupo = Producto.objects.filter(nombre__in=["Desca Leche", "Desca Cortado", "Desca Solo"])
+        for p in grupo:
+            p.kilos_disponibles = nuevo_valor
+            p.save()
+
+
 
     elif not producto.es_barril:
         producto.cantidad = max(producto.cantidad - cantidad_a_pagar, 0)
