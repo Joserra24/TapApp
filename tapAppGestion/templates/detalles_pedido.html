@@ -41,6 +41,14 @@
                     <a href="{% url 'eliminar_producto_pedido' pedido.id producto_pedido.producto.id %}"
                         class="eliminar-btn-details">X</a>
 
+                    {% if producto_pedido.cantidad > 1 or productos_pedido|length > 1%}
+                        <!-- Solo se muestra este botón si hay más de un producto en el pedido -->
+                        <form action="{% url 'pagar_producto' pedido.id producto_pedido.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="pagar-btn-individual">Pagar Producto</button>
+                        </form>
+                    {% endif %}
+
                     <!-- Botón para mostrar campo de nota -->
                     <button type="button" class="nota-btn" onclick="toggleNota({{ producto_pedido.id }})">+</button>
 
