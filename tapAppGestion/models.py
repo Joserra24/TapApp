@@ -56,6 +56,7 @@ class PedidoProducto(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     cantidad = models.PositiveIntegerField(default=1)
     nota = models.TextField(blank=True, null=True)  # Nuevo campo para notas
+    
 
 
     def __str__(self):

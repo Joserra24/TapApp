@@ -190,6 +190,21 @@ body {
 .pagar-btn:hover {
     background-color: #DAA520;
 }
+.pagar-btn-individual {
+    background-color: #FFD700; /* Amarillo oro */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.pagar-btn-individual:hover {
+    background-color: #DAA520;
+}
 
 /* Contenedor del título y botón */
 .header-pedidos {

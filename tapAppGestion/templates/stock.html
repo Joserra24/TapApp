@@ -67,9 +67,13 @@
             {% if producto.es_barril %}
             {% if producto.litros_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
                 {% endif %}
+                {% elif producto.categoria == "Entrantes" and producto.nombre == "Croquetas Gourmet" or producto.nombre == "Croquetas Caseras" %}
+                {% if producto.cantidad < 10 %} <p class="reponer">Necesita reponer</p>
+                {% endif %}
                 {% elif producto.categoria == "Carnes Ibéricas" or producto.categoria == "Pescados" or producto.categoria == "Entrantes" %}
                 {% if producto.kilos_disponibles <= 5 %} <p class="reponer">Necesita reponer</p>
                     {% endif %}
+                   
                     {% else %}
                     {% if producto.cantidad < 10 %} <p class="reponer">Necesita reponer</p>
                         {% endif %}

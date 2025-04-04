@@ -179,7 +179,7 @@ def lista_pedidos_cerrados(request):
     # Convertir fecha de cierre a hora de Madrid
     pedidos_con_precio = []
     for pedido in pedidos:
-        total_pedido = pedido.pedidoproducto_set.aggregate(Sum('producto__precio'))['producto__precio__sum'] or 0
+        total_pedido = pedido.pedidoproducto_set.aggregate(total=Sum(F('producto__precio') * F('cantidad')))['total'] or 0
         pedido.fecha_cierre = localtime(pedido.fecha_cierre)
         pedidos_con_precio.append({'pedido': pedido, 'total_pedido': total_pedido, 'pedido.fecha_cierre': pedido.fecha_cierre})
 
@@ -799,5 +799,140 @@ def generar_ticket_cliente(request, pedido_id):
         return HttpResponse("❌ Error al generar el ticket del cliente")
     return response
 
+
+@login_required
+def pagar_producto(request, pedido_id, producto_pedido_id):
+    # Obtenemos la línea del pedido
+    producto_pedido = get_object_or_404(PedidoProducto, id=producto_pedido_id, pedido_id=pedido_id)
+    producto = producto_pedido.producto
+    cantidad_a_pagar = 1  # Solo se procesa 1 unidad
+
+    # --------------------- Lógica de actualización del stock ---------------------
+    conversion_litros = {
+        "Cerveza Con": 0.2,
+        "Tubo Con": 0.25,
+        "Cortada": 0.275,
+        "Cañón": 0.350,
+        "Cerveza Sin": 0.2,
+        "Tubo Sin": 0.25,
+        "Radler": 0.2,
+    }
+    grupo_con = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
+    grupo_sin = ["Cerveza Sin", "Tubo Sin"]
+
+    vinos = [
+        "Ramón Bilbao Crianza", "Dulce Eva", "Ramón Bilbao Rueda", "Árabe",
+        "Viña Pelina", "Habla del Silencio", "Alaude",
+        "Ramón Bilbao Reserva", "Marqués de Riscal", "Resalso"
+    ]
+    RESTA_KILOS = Decimal("0.3")
+
+    bocadillos_descuento = {
+        "Serranito": Decimal("0.2"),       # 200 g
+        "Montado de Lomo": Decimal("0.1"),  # 100 g
+    }
+    BOCADILLOS_GRUPO = ["Serranito", "Montado de Lomo"]
+    total_bocadillos = Decimal("0")
+
+    ENTRANTES_KILOS = ["Pollo Kentaky", "Patatas Braviolis", "Jamón", "Queso", "Caña Lomo"]
+
+    ENSALADAS_GRUPO = ["Ensalada Atún", "Ensalada Rulo Cabra"]
+    total_ensaladas = Decimal("0")
+
+    croquetas_descuento = {
+        "Croquetas Caseras": 10,
+        "Croquetas Gourmet": 10
+    }
+
+    if producto.nombre in conversion_litros:
+        litros_por_unidad = Decimal(str(conversion_litros[producto.nombre]))
+        litros_a_restar = litros_por_unidad * cantidad_a_pagar
+        if producto.nombre in grupo_con:
+            grupo = Producto.objects.filter(nombre__in=grupo_con)
+            barril_ref = grupo.filter(nombre="Cerveza Con").first()
+        elif producto.nombre in grupo_sin:
+            grupo = Producto.objects.filter(nombre__in=grupo_sin)
+            barril_ref = grupo.filter(nombre="Cerveza Sin").first()
+        else:
+            grupo = [producto]
+            barril_ref = producto
+        if barril_ref:
+            litros_actuales = barril_ref.litros_disponibles or Decimal("0")
+            nuevo_valor = max(litros_actuales - litros_a_restar, Decimal("0"))
+            for p in grupo:
+                p.litros_disponibles = nuevo_valor
+                p.save()
+
+    elif producto.nombre in vinos:
+        litros_actuales = producto.litros_disponibles or Decimal("0")
+        total_a_restar = Decimal("0.15") * cantidad_a_pagar
+        producto.litros_disponibles = max(litros_actuales - total_a_restar, Decimal("0"))
+        producto.save()
+
+    elif producto.nombre.startswith("Botella "):
+        producto.cantidad = max(producto.cantidad - cantidad_a_pagar, 0)
+        producto.save()
+
+    elif producto.nombre in ENTRANTES_KILOS:
+        kilos_actuales = producto.kilos_disponibles or Decimal("0")
+        total_a_restar = Decimal("0.3") * cantidad_a_pagar
+        producto.kilos_disponibles = max(kilos_actuales - total_a_restar, Decimal("0"))
+        producto.save()
+
+    elif producto.nombre in ENSALADAS_GRUPO:
+        deduction = Decimal("0.3") * cantidad_a_pagar
+        total_ensaladas += deduction
+        # Se actualizará el grupo después del bucle
+
+    elif producto.nombre in croquetas_descuento:
+        deduction_units = croquetas_descuento[producto.nombre] * cantidad_a_pagar
+        producto.cantidad = max(producto.cantidad - deduction_units, 0)
+        producto.save()
+
+    elif producto.categoria in ["Carnes Ibéricas", "Pescados"]:
+        kilos_actuales = producto.kilos_disponibles or Decimal("0")
+        total_a_restar = RESTA_KILOS * cantidad_a_pagar
+        producto.kilos_disponibles = max(kilos_actuales - total_a_restar, Decimal("0"))
+        producto.save()
+
+    elif producto.categoria == "Bocadillos" and (producto.nombre == "Serranito" or producto.nombre == "Montado de Lomo"):
+        deduction = bocadillos_descuento[producto.nombre] * cantidad_a_pagar
+        total_bocadillos += deduction
+
+    elif not producto.es_barril:
+        producto.cantidad = max(producto.cantidad - cantidad_a_pagar, 0)
+        producto.save()
+
+    # Aplicar acumulaciones para grupos:
+    if total_bocadillos > 0:
+        bocadillo_ref = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO).first()
+        if bocadillo_ref:
+            kilos_actuales = bocadillo_ref.kilos_disponibles or Decimal("0")
+            nuevo_valor = max(kilos_actuales - total_bocadillos, Decimal("0"))
+            grupo_bocadillos = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO)
+            for p in grupo_bocadillos:
+                p.kilos_disponibles = nuevo_valor
+                p.save()
+
+    if total_ensaladas > 0:
+        ensalada_ref = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO).first()
+        if ensalada_ref:
+            kilos_actuales = ensalada_ref.kilos_disponibles or Decimal("0")
+            nuevo_valor = max(kilos_actuales - total_ensaladas, Decimal("0"))
+            grupo_ensaladas = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO)
+            for p in grupo_ensaladas:
+                p.kilos_disponibles = nuevo_valor
+                p.save()
+
+    # --------------------- Actualizamos la línea del pedido ---------------------
+    # Se resta 1 unidad; si queda 0, se elimina la línea para quitar el producto de la lista.
+    if producto_pedido.cantidad > 1:
+        producto_pedido.cantidad -= 1
+        producto_pedido.save()
+    else:
+        producto_pedido.delete()
+
+    messages.success(request, f"Se ha pagado 1 unidad de {producto.nombre}.")
+    return redirect('detalles_pedido', pedido_id=pedido_id)
 
 
