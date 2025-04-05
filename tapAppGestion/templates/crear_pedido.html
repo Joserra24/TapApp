@@ -11,6 +11,50 @@
   <meta charset="UTF-8" />
   <title>Crear Pedido</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/stylesCrearPedido.css' %}">
+  <style>
+    /* Modal a pantalla completa con fondo semitransparente */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999; /* Asegura que esté por encima de todo */
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4); /* Fondo semitransparente */
+    }
+  
+    /* Contenido del modal centrado en la pantalla */
+    .modal-content {
+      /* Ajusta la posición para centrarlo vertical y horizontalmente */
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+  
+      /* Ajusta el tamaño y estilo del recuadro */
+      width: 400px;
+      max-width: 80%;
+      padding: 20px;
+      border-radius: 5px;
+  
+      /* Fondo y colores estilo "rojo clarito" */
+      background-color: #f8d7da; /* Rojo clarito */
+      color: #721c24;           /* Texto en tono más oscuro */
+      border: 1px solid #f5c6cb;
+      text-align: center;
+    }
+  
+    /* Botón de cierre (la “x”) */
+    .close {
+      color: #721c24;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -66,8 +110,8 @@
             {% for producto in productos %}
             <div class="producto">
               <input type="checkbox" name="productos" value="{{ producto.id }}" id="producto_{{ producto.id }}"
-                data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" style="display:none;"
-                onchange="toggleCantidad('{{ producto.id }}')">
+              data-nombre="{{ producto.nombre }}" data-precio="{{ producto.precio }}" data-stock="{{ producto.cantidad }}"
+              style="display:none;" onchange="toggleCantidad('{{ producto.id }}')">       
               <span>{{ producto.nombre }} - {{ producto.precio }}€</span>
               <div class="cantidad-control">
                 <button type="button" onclick="cambiarCantidad('{{ producto.id }}', -1)">-</button>
@@ -90,6 +134,15 @@
     </form>
     </div>
   </main>
+
+  
+  <!-- Modal para notificación de stock insuficiente -->
+  <div id="stockModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('stockModal').style.display='none'">×</span>
+      <p id="stockModalMessage"></p>
+    </div>
+  </div>
 
   <script>
 
@@ -257,6 +310,45 @@
         categoria.style.display = algunoVisible ? "block" : "none";
       });
     }
+  </script>
+  <script>
+    document.getElementById('pedido-form').addEventListener('submit', function(event) {
+    let errorMessages = [];
+    
+    document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+      let cantidadSolicitada = parseInt(input.value);
+      if (cantidadSolicitada > 0) {
+        let productoId = input.id.replace("cantidad_", "");
+        let checkbox = document.getElementById('producto_' + productoId);
+        let stockDisponible = parseInt(checkbox.getAttribute('data-stock'));
+        if (cantidadSolicitada > stockDisponible) {
+          errorMessages.push(
+            "No hay suficiente stock.<br>" +
+            "Producto: " + checkbox.getAttribute('data-nombre') + ".<br>" +
+            "Stock disponible: " + stockDisponible
+          );
+        }
+      }
+    });
+    
+    if (errorMessages.length > 0) {
+      event.preventDefault();
+      // Se unen los mensajes con doble salto de línea entre cada error
+      document.getElementById('stockModalMessage').innerHTML = errorMessages.join("<br><br>");
+      document.getElementById('stockModal').style.display = 'block';
+      return false;
+    }
+    
+    // Si no hay errores, se prepara el campo oculto con las cantidades
+    const cantidades = {};
+    document.querySelectorAll('input[name^="cantidad_"]').forEach(input => {
+      if (input.style.display !== 'none') {
+        cantidades[input.name.replace('cantidad_', '')] = input.value;
+      }
+    });
+    document.getElementById('cantidades').value = JSON.stringify(cantidades);
+  });
+
   </script>
 </body>
 </html>
