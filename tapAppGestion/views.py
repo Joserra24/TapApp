@@ -329,6 +329,7 @@ def crear_pedido(request):
             productos = request.POST.getlist('productos')
             cantidades = json.loads(request.POST.get('cantidades', '{}'))
 
+
             for producto_id in productos:
                 producto = Producto.objects.get(id=producto_id)
                 cantidad = cantidades.get(str(producto.id), 1)
