@@ -1,6 +1,5 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
 <style>
     body {
@@ -131,17 +130,35 @@
     <label for="fecha_fin">Hasta:</label>
     <input type="date" name="fecha_fin" id="fecha_fin">
 
+    {% if camareros %}
+    <label for="camarero">Camarero:</label>
+    <select name="camarero" id="camarero">
+        <option value="">Todos</option>
+        {% for c in camareros %}
+            <option value="{{ c.id }}" {% if request.GET.camarero == c.id|stringformat:"s" %}selected{% endif %}>
+                {{ c.username }}
+            </option>
+        {% endfor %}
+    </select>
+    {% endif %}
+
     <button type="submit" class="boton-crono">Filtrar</button>
 </form>
 
 <table>
     <tr>
+        {% if user.is_superuser %}
+            <th>Camarero</th>
+        {% endif %}
         <th>Hora de Entrada</th>
         <th>Hora de Salida</th>
         <th>Duración</th>
     </tr>
     {% for registro in registros %}
     <tr>
+        {% if user.is_superuser %}
+            <td>{{ registro.camarero.username }}</td>
+        {% endif %}
         <td class="hora_entrada" data-hora="{{ registro.hora_entrada|date:'Y-m-d H:i:s' }}"
             data-activo="{{ registro.activo }}">
             {{ registro.hora_entrada|date:"F, j Y H:i" }}
