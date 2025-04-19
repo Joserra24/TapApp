@@ -103,45 +103,63 @@
         font-size: 18px;
     }
 </style>
+
 <h2>Registro de Horarios</h2>
 
-<form action="{% url 'registrar_entrada' %}" method="post">
-    {% csrf_token %}
-    <button class='boton-crono' type="submit">Registrar Entrada</button>
-</form>
-
-<form action="{% url 'registrar_salida' %}" method="post">
-    {% csrf_token %}
-    <button class='boton-crono' type="submit">Registrar Salida</button>
-</form>
+{% if not registro_activo %}
+    <!-- Si no hay turno activo, permite iniciar -->
+    <form action="{% url 'registrar_entrada' %}" method="post">
+        {% csrf_token %}
+        <button class="boton-crono" type="submit">Registrar Entrada</button>
+    </form>
+{% else %}
+    {% if registro_activo.pausado %}
+        <form action="{% url 'reanudar_jornada' %}" method="post">
+            {% csrf_token %}
+            <button class="boton-crono" type="submit">Reanudar Jornada</button>
+        </form>
+    {% else %}
+        <form action="{% url 'pausar_jornada' %}" method="post">
+            {% csrf_token %}
+            <button class="boton-crono" type="submit">Pausar Jornada</button>
+        </form>
+    {% endif %}
+    <form action="{% url 'registrar_salida' %}" method="post">
+        {% csrf_token %}
+        <button class="boton-crono" type="submit">Registrar Salida</button>
+    </form>
+{% endif %}
 
 <form method="get" action="{% url 'exportar_horarios_pdf' %}">
     <button type="submit" class="boton-crono">Exportar a PDF</button>
 </form>
 
 <h3>Tiempo Transcurrido</h3>
-<p id="cronometro">00:00:00</p>
+<!-- El cronómetro usará los datos del registro activo (si existe) -->
+{% if registro_activo %}
+    <p id="cronometro">00:00:00</p>
+{% else %}
+    <p id="cronometro">00:00:00</p>
+{% endif %}
 
 <h3>Historial de Horarios</h3>
 <form method="get" style="margin-bottom: 20px; text-align: center;">
     <label for="fecha_inicio">Desde:</label>
-    <input type="date" name="fecha_inicio" id="fecha_inicio">
-
+    <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ request.GET.fecha_inicio }}">
+    
     <label for="fecha_fin">Hasta:</label>
-    <input type="date" name="fecha_fin" id="fecha_fin">
-
+    <input type="date" name="fecha_fin" id="fecha_fin" value="{{ request.GET.fecha_fin }}">
+    
     {% if camareros %}
-    <label for="camarero">Camarero:</label>
-    <select name="camarero" id="camarero">
-        <option value="">Todos</option>
-        {% for c in camareros %}
-            <option value="{{ c.id }}" {% if request.GET.camarero == c.id|stringformat:"s" %}selected{% endif %}>
-                {{ c.username }}
-            </option>
-        {% endfor %}
-    </select>
+        <label for="camarero">Camarero:</label>
+        <select name="camarero" id="camarero">
+            <option value="">Todos</option>
+            {% for c in camareros %}
+                <option value="{{ c.id }}" {% if request.GET.camarero == c.id|stringformat:"s" %}selected{% endif %}>{{ c.username }}</option>
+            {% endfor %}
+        </select>
     {% endif %}
-
+    
     <button type="submit" class="boton-crono">Filtrar</button>
 </form>
 
@@ -159,15 +177,18 @@
         {% if user.is_superuser %}
             <td>{{ registro.camarero.username }}</td>
         {% endif %}
-        <td class="hora_entrada" data-hora="{{ registro.hora_entrada|date:'Y-m-d H:i:s' }}"
-            data-activo="{{ registro.activo }}">
+        <td class="hora_entrada"
+            data-hora="{{ registro.hora_entrada|date:'Y-m-d H:i:s' }}"
+            data-activo="{{ registro.activo }}"
+            data-pausado="{{ registro.pausado }}"
+            data-transcurrido="{{ registro.tiempo_transcurrido|default:'0' }}">
             {{ registro.hora_entrada|date:"F, j Y H:i" }}
         </td>
         <td>
             {% if registro.hora_salida %}
-            {{ registro.hora_salida|date:"F, j Y H:i" }}
+                {{ registro.hora_salida|date:"F, j Y H:i" }}
             {% else %}
-            -
+                -
             {% endif %}
         </td>
         <td>{{ registro.calcular_duracion|default:"-" }}</td>
@@ -179,32 +200,38 @@
     document.addEventListener("DOMContentLoaded", function () {
         let entradaElemento = document.querySelector(".hora_entrada");
         let cronometro = document.getElementById("cronometro");
-
         if (entradaElemento) {
-            let horaEntrada = entradaElemento.getAttribute("data-hora");
+            let horaEntradaStr = entradaElemento.getAttribute("data-hora");
             let activo = entradaElemento.getAttribute("data-activo") === "True";
+            let pausado = entradaElemento.getAttribute("data-pausado") === "True";
+            let baseElapsed = parseInt(entradaElemento.getAttribute("data-transcurrido") || "0"); // en ms
 
-            if (horaEntrada && activo) {
-                let inicio = new Date(horaEntrada).getTime();
+            if (horaEntradaStr && activo) {
+                let horaEntrada = new Date(horaEntradaStr).getTime();
 
-                function actualizarCronometro() {
-                    let ahora = new Date().getTime();
-                    let diferencia = ahora - inicio;
-
-                    let horas = Math.floor(diferencia / (1000 * 60 * 60));
-                    let minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
-                    let segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
-
-                    horas = (horas < 10) ? "0" + horas : horas;
-                    minutos = (minutos < 10) ? "0" + minutos : minutos;
-                    segundos = (segundos < 10) ? "0" + segundos : segundos;
-
-                    cronometro.textContent = horas + ":" + minutos + ":" + segundos;
+                function displayTime(ms) {
+                    let hours = Math.floor(ms / (1000 * 60 * 60));
+                    let minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+                    let seconds = Math.floor((ms % (1000 * 60)) / 1000);
+                    hours = (hours < 10) ? "0" + hours : hours;
+                    minutes = (minutes < 10) ? "0" + minutes : minutes;
+                    seconds = (seconds < 10) ? "0" + seconds : seconds;
+                    cronometro.textContent = hours + ":" + minutes + ":" + seconds;
                 }
 
-                setInterval(actualizarCronometro, 1000);
+                if (pausado) {
+                    // Si la jornada está pausada, muestra el tiempo acumulado sin actualizar
+                    displayTime(baseElapsed);
+                } else {
+                    // En jornada activa, suma el tiempo transcurrido desde horaEntrada
+                    setInterval(function () {
+                        let now = new Date().getTime();
+                        let elapsed = baseElapsed + (now - horaEntrada);
+                        displayTime(elapsed);
+                    }, 1000);
+                }
             } else {
-                cronometro.textContent = "00:00:00"; // Reinicia a 0 si no hay entrada activa
+                cronometro.textContent = "00:00:00";
             }
         }
     });

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.timezone import now
 import datetime
+from datetime import timedelta
 
 
 class Producto(models.Model):
@@ -68,6 +69,9 @@ class RegistroHorario(models.Model):
     hora_entrada = models.DateTimeField(default=now)
     hora_salida = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)  # Indica si el turno está activo
+    pausado = models.BooleanField(default=False)
+    tiempo_transcurrido = models.DurationField(default=timedelta(0))
+
 
     def calcular_duracion(self):
         if self.hora_salida:

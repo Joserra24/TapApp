@@ -64,6 +64,10 @@ urlpatterns = [
     path('control_horarios/exportar_pdf/', views.exportar_horarios_pdf, name='exportar_horarios_pdf'),
     path('pedidos/<int:pedido_id>/ticket_pdf/', views.generar_ticket_pdf, name='generar_ticket_pdf'),
     path('pedidos/<int:pedido_id>/ticket_cliente/', views.generar_ticket_cliente, name='generar_ticket_cliente'),
+    path('pausar_jornada/', views.pausar_jornada, name='pausar_jornada'),
+    path('reanudar_jornada/', views.reanudar_jornada, name='reanudar_jornada'),
+
+
 
 
 

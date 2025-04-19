@@ -15,6 +15,8 @@ from xhtml2pdf import pisa
 from .models import RegistroHorario
 from collections import defaultdict
 from django.core.exceptions import PermissionDenied
+from django.utils import timezone
+
 
 
 
@@ -804,6 +806,11 @@ def control_horarios(request):
 
     registros = registros.order_by('-hora_entrada')
 
+    try:
+        registro_activo = RegistroHorario.objects.get(camarero=request.user, activo=True)
+    except RegistroHorario.DoesNotExist:
+        registro_activo = None
+
     # Para el filtro por camarero, obtenemos la lista de camareros que tengan al menos un registro.
     # Esto se realiza solo para administradores.
     if request.user.is_superuser:
@@ -816,7 +823,8 @@ def control_horarios(request):
         'fecha_inicio': fecha_inicio,
         'fecha_fin': fecha_fin,
         'camareros': camareros,
-        'selected_camarero': selected_camarero
+        'selected_camarero': selected_camarero,
+        'registro_activo': registro_activo,
     })
 
 @login_required
@@ -1047,5 +1055,38 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
 
     messages.success(request, f"Se ha pagado 1 unidad de {producto.nombre}.")
     return redirect('detalles_pedido', pedido_id=pedido_id)
+
+@login_required
+def pausar_jornada(request):
+    try:
+        registro = RegistroHorario.objects.get(camarero=request.user, activo=True)
+        now = timezone.now()
+        # Calcular el tiempo transcurrido como timedelta
+        elapsed = now - registro.hora_entrada
+        registro.tiempo_transcurrido = elapsed  # Asigna el timedelta directamente
+        registro.pausado = True
+        registro.save()
+        messages.success(request, "Jornada pausada correctamente.")
+    except RegistroHorario.DoesNotExist:
+        messages.error(request, "No tienes un turno activo para pausar.")
+    return redirect('control_horarios')
+
+@login_required
+def reanudar_jornada(request):
+    try:
+        registro = RegistroHorario.objects.get(camarero=request.user, activo=True, pausado=True)
+        now = timezone.now()
+        # Recuperar el tiempo acumulado como timedelta
+        paused_duration = registro.tiempo_transcurrido
+        # Ajustamos la hora de entrada para que, al calcular la diferencia, se incluya el tiempo ya acumulado
+        registro.hora_entrada = now - paused_duration
+        registro.pausado = False
+        # Reiniciamos el tiempo acumulado para futuras pausas
+        registro.tiempo_transcurrido = timedelta(0)
+        registro.save()
+        messages.success(request, "Jornada reanudada correctamente.")
+    except RegistroHorario.DoesNotExist:
+        messages.error(request, "No tienes un turno pausado para reanudar.")
+    return redirect('control_horarios')
 
 
