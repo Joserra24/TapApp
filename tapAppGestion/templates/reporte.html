@@ -1,0 +1,184 @@
+{# templates/reporte.html #}
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+  .reporte-wrapper {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 40px auto;
+  }
+  .container {
+    flex: 1;
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+  }
+  h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 2rem;
+  }
+  .fecha-form {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .fecha-form label {
+    margin-right: 10px;
+    font-weight: bold;
+    color: #555;
+  }
+  .fecha-form input[type="date"] {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  h3 {
+    text-align: center;
+    color: #444;
+    margin-bottom: 20px;
+  }
+  .top-product {
+    text-align: center;
+    color: #d9534f;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  table.reporte-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  table.reporte-table th,
+  table.reporte-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    color: #333;
+  }
+  table.reporte-table th {
+    background-color: #8ae650;
+    color: #fff;
+    text-align: left;
+  }
+  table.reporte-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  table.reporte-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  table.reporte-table tfoot td {
+    background-color: #e9e9e9;
+    font-weight: bold;
+    text-align: right;
+  }
+  .chart-outside {
+    width: 400px;
+    margin-left: 20px;
+  }
+</style>
+
+<div class="reporte-wrapper">
+  <div class="container">
+    <h2>Reporte de Ventas</h2>
+
+    <form method="get" class="fecha-form">
+      <label for="fecha">Selecciona fecha:</label>
+      <input
+        type="date"
+        id="fecha"
+        name="fecha"
+        value="{{ fecha|date:'Y-m-d' }}"
+        onchange="this.form.submit()"
+      >
+      <noscript><button type="submit">Ver</button></noscript>
+    </form>
+
+    <h3>{{ fecha|date:"j \\d\\e F \\d\\e Y" }}</h3>
+
+    {% if top_name %}
+      <div class="top-product">
+        ⭐ Producto estrella: {{ top_name }} ({{ top_count }} unidades)
+      </div>
+    {% endif %}
+
+    {% if reporte_por_categoria %}
+    <table class="reporte-table">
+        <thead>
+          <tr>
+            <th>Categoría</th>
+            <th>Producto</th>
+            <th>Precio unidad</th>
+            <th>Cantidad</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for categoria, items in reporte_por_categoria.items %}
+            {% for prod in items %}
+              <tr>
+                <td>{{ categoria }}</td>
+                <td>{{ prod.nombre }}</td>
+                <td>{{ prod.precio|floatformat:2 }} €</td>
+                <td>{{ prod.cantidad }}</td>
+                <td>{{ prod.total|floatformat:2 }} €</td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="4" style="text-align:right; font-weight:bold;">
+              Total del día:
+            </td>
+            <td style="font-weight:bold;">
+              {{ grand_total|floatformat:2 }} €
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    {% else %}
+      <p style="text-align:center; color:#888; font-style:italic; margin-top:30px;">
+        No se han registrado ventas para esta fecha.
+      </p>
+    {% endif %}
+  </div>
+
+  <div class="chart-outside">
+    <canvas id="pieChart"></canvas>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const breakdown = {
+    {% for categoria, items in reporte_por_categoria.items %}
+      "{{ categoria }}": "{% for prod in items %}{{ prod.cantidad }}×{{ prod.nombre }}{% if not forloop.last %} y {% endif %}{% endfor %}",
+    {% endfor %}
+  };
+  const ctx = document.getElementById('pieChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: {{ labels|safe }},
+      datasets: [{ data: {{ values|safe }} }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => breakdown[ctx.label] || ctx.formattedValue
+          }
+        },
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+</script>
+{% endblock %}

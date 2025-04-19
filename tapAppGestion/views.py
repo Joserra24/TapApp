@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import Pedido, Producto, PedidoProducto
 from django.utils.timezone import now, localtime, timedelta
-from django.db.models import Sum, F
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
 from django.utils.dateparse import parse_date
 from django.template.loader import get_template
@@ -1089,4 +1089,70 @@ def reanudar_jornada(request):
         messages.error(request, "No tienes un turno pausado para reanudar.")
     return redirect('control_horarios')
 
+@login_required
+def reporte(request):
+    # 1) Fecha seleccionada o hoy
+    fecha_str = request.GET.get('fecha')
+    if fecha_str:
+        try:
+            fecha = parse_date(fecha_str)
+        except (ValueError, TypeError):
+            fecha = localtime(now()).date()
+    else:
+        fecha = localtime(now()).date()
 
+    # 2) Pedidos pagados esa fecha
+    pedidos = Pedido.objects.filter(pagado=True, fecha_cierre__date=fecha)
+
+    # 3) Anotar cantidad y precio unitario, luego total por producto
+    ventas = (
+        PedidoProducto.objects
+            .filter(pedido__in=pedidos)
+            .values('producto__categoria',
+                    'producto__nombre',
+                    'producto__precio')
+            .annotate(cantidad=Sum('cantidad'))
+            .annotate(
+                total=ExpressionWrapper(
+                    F('cantidad') * F('producto__precio'),
+                    output_field=DecimalField(max_digits=12, decimal_places=2)
+                )
+            )
+            .order_by('producto__categoria', 'producto__nombre')
+    )
+
+    # 4) Agrupar para el template
+    reporte_por_categoria = {}
+    for v in ventas:
+        cat = v['producto__categoria']
+        reporte_por_categoria.setdefault(cat, []).append({
+            'nombre':   v['producto__nombre'],
+            'precio':   v['producto__precio'],
+            'cantidad': v['cantidad'],
+            'total':    v['total'],
+        })
+
+    # 5) Datos para la gráfica
+    labels = list(reporte_por_categoria.keys())
+    values = [
+        sum(prod['cantidad'] for prod in items)
+        for items in reporte_por_categoria.values()
+    ]
+
+    # 6) Producto estrella
+    top = max(ventas, key=lambda x: x['cantidad'], default=None)
+    top_name  = top['producto__nombre'] if top else None
+    top_count = top['cantidad']          if top else 0
+
+    # 7) **Total del día**: suma de todos los totales individuales
+    grand_total = sum(v['total'] for v in ventas) if ventas else 0
+
+    return render(request, 'reporte.html', {
+        'fecha': fecha,
+        'reporte_por_categoria': reporte_por_categoria,
+        'labels': labels,
+        'values': values,
+        'top_name': top_name,
+        'top_count': top_count,
+        'grand_total': grand_total,  # <- ¡no lo olvides!
+    })
