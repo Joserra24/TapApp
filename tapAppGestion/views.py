@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
@@ -14,6 +14,10 @@ from django.http import HttpResponse
 from xhtml2pdf import pisa
 from .models import RegistroHorario
 from collections import defaultdict
+from django.core.exceptions import PermissionDenied
+from django.utils import timezone
+
+
 
 
 
@@ -29,6 +33,9 @@ from .models import Producto, Pedido, RegistroHorario
 @login_required
 def index(request):
     return render(request, 'index.html')
+
+def admin_required(user):
+    return user.is_superuser
 
 def agregar_producto(request):
     if request.method == 'POST':
@@ -354,7 +361,9 @@ def crear_pedido(request):
     return render(request, 'crear_pedido.html', {'form': form, 'categorias': categorias})
 
 @login_required
+@user_passes_test(admin_required)
 def stock(request):
+
     categoria_seleccionada = request.GET.get('categoria', None)
 
     # Grupos de productos que comparten barril
@@ -772,7 +781,20 @@ def exportar_horarios_pdf(request):
 
 @login_required
 def control_horarios(request):
-    registros = RegistroHorario.objects.filter(camarero=request.user)
+    # Si el usuario es administrador, obtiene todos los registros;
+    # en ese caso se permite filtrar por camarero mediante el parámetro GET "camarero".
+    if request.user.is_superuser:
+        registros = RegistroHorario.objects.all()
+        # Obtener el filtro de camarero enviado en el GET (si existe)
+        selected_camarero = request.GET.get('camarero', '')
+        if selected_camarero:
+            registros = registros.filter(camarero__id=selected_camarero)
+        camareros = User.objects.filter(registrohorario__isnull=False).distinct()
+    else:
+        registros = RegistroHorario.objects.filter(camarero=request.user)
+        selected_camarero = None
+        camareros = None
+
 
     fecha_inicio = request.GET.get('fecha_inicio')
     fecha_fin = request.GET.get('fecha_fin')
@@ -784,10 +806,25 @@ def control_horarios(request):
 
     registros = registros.order_by('-hora_entrada')
 
+    try:
+        registro_activo = RegistroHorario.objects.get(camarero=request.user, activo=True)
+    except RegistroHorario.DoesNotExist:
+        registro_activo = None
+
+    # Para el filtro por camarero, obtenemos la lista de camareros que tengan al menos un registro.
+    # Esto se realiza solo para administradores.
+    if request.user.is_superuser:
+        camareros = User.objects.filter(registrohorario__isnull=False).distinct()
+    else:
+        camareros = None
+
     return render(request, 'control_horarios.html', {
         'registros': registros,
         'fecha_inicio': fecha_inicio,
-        'fecha_fin': fecha_fin
+        'fecha_fin': fecha_fin,
+        'camareros': camareros,
+        'selected_camarero': selected_camarero,
+        'registro_activo': registro_activo,
     })
 
 @login_required
@@ -1018,5 +1055,38 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
 
     messages.success(request, f"Se ha pagado 1 unidad de {producto.nombre}.")
     return redirect('detalles_pedido', pedido_id=pedido_id)
+
+@login_required
+def pausar_jornada(request):
+    try:
+        registro = RegistroHorario.objects.get(camarero=request.user, activo=True)
+        now = timezone.now()
+        # Calcular el tiempo transcurrido como timedelta
+        elapsed = now - registro.hora_entrada
+        registro.tiempo_transcurrido = elapsed  # Asigna el timedelta directamente
+        registro.pausado = True
+        registro.save()
+        messages.success(request, "Jornada pausada correctamente.")
+    except RegistroHorario.DoesNotExist:
+        messages.error(request, "No tienes un turno activo para pausar.")
+    return redirect('control_horarios')
+
+@login_required
+def reanudar_jornada(request):
+    try:
+        registro = RegistroHorario.objects.get(camarero=request.user, activo=True, pausado=True)
+        now = timezone.now()
+        # Recuperar el tiempo acumulado como timedelta
+        paused_duration = registro.tiempo_transcurrido
+        # Ajustamos la hora de entrada para que, al calcular la diferencia, se incluya el tiempo ya acumulado
+        registro.hora_entrada = now - paused_duration
+        registro.pausado = False
+        # Reiniciamos el tiempo acumulado para futuras pausas
+        registro.tiempo_transcurrido = timedelta(0)
+        registro.save()
+        messages.success(request, "Jornada reanudada correctamente.")
+    except RegistroHorario.DoesNotExist:
+        messages.error(request, "No tienes un turno pausado para reanudar.")
+    return redirect('control_horarios')
 
 
