@@ -66,6 +66,8 @@ urlpatterns = [
     path('pedidos/<int:pedido_id>/ticket_cliente/', views.generar_ticket_cliente, name='generar_ticket_cliente'),
     path('pausar_jornada/', views.pausar_jornada, name='pausar_jornada'),
     path('reanudar_jornada/', views.reanudar_jornada, name='reanudar_jornada'),
+    path('reporte/', views.reporte, name='reporte'),
+
 
 
 
