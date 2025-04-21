@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: DejaVu Sans, sans-serif;
+      padding: 30px;
+      font-size: 12px;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #999;
+      padding: 8px;
+      text-align: center;
+    }
+
+    th {
+      background-color: #d2e9ff;
+    }
+
+    .section-title {
+      margin-top: 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border-bottom: 1px solid #aaa;
+      padding-bottom: 4px;
+    }
+
+    .totals {
+      margin-top: 10px;
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .grafica {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .grafica img {
+      width: 400px;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+  <div>
+    <h1>Reporte de Ventas</h1>
+    <p style="text-align: center;">Generado el {{ now|date:"d/m/Y" }}</p>
+
+    <div class="section-title">Ingresos por Día</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Total (€)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dia in ventas_por_dia %}
+        <tr>
+          <td>{{ dia.fecha_cierre__date|date:"d/m/Y" }}</td>
+          <td>{{ dia.total|floatformat:2 }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-break">
+    <div class="section-title">Ingresos por Mes</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Mes</th>
+          <th>Total (€)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for mes in ventas_por_mes %}
+        <tr>
+          <td>{{ mes.mes|date:"F Y" }}</td>
+          <td>{{ mes.total|floatformat:2 }} €</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="totals">
+      Total ingresos (hasta la fecha): {{ total_ingresos|floatformat:2 }} €
+    </p>
+  </div>
+
+</body>
+</html>

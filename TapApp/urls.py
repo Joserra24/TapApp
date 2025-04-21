@@ -67,6 +67,7 @@ urlpatterns = [
     path('pausar_jornada/', views.pausar_jornada, name='pausar_jornada'),
     path('reanudar_jornada/', views.reanudar_jornada, name='reanudar_jornada'),
     path('reporte/', views.reporte, name='reporte'),
+    path('reporte/pdf/', views.reporte_pdf, name='reporte_pdf'),
 
 
 
