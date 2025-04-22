@@ -286,6 +286,14 @@ def editar_pedido(request, pedido_id):
     productos = Producto.objects.all().order_by('categoria')
     categorias = {}
     for producto in productos:
+        # Cafés normales
+        if producto.categoria == "Cafés" and producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
+            producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
+
+        # Descafeinados
+        elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
+            producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
+
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
         categorias[producto.categoria].append(producto)
@@ -358,6 +366,14 @@ def crear_pedido(request):
     productos = Producto.objects.all().order_by('categoria')
     categorias = {}
     for producto in productos:
+        # Cafés normales
+        if producto.categoria == "Cafés" and producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
+            producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
+
+        # Descafeinados
+        elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
+            producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
+
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
         categorias[producto.categoria].append(producto)

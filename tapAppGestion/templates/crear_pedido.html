@@ -350,6 +350,36 @@
   });
 
   </script>
+  <script>
+    // Cierra el modal y elimina del pedido los productos sin stock
+    function cerrarModalYLimpiarProductos() {
+      const modal = document.getElementById("stockModal");
+      const mensaje = document.getElementById("stockModalMessage").innerHTML;
+      modal.style.display = "none";
+  
+      // Buscar IDs de productos en el mensaje del modal
+      const regex = /Producto: ([^<]+)\./g;
+      let match;
+      while ((match = regex.exec(mensaje)) !== null) {
+        const nombreProducto = match[1].trim().toLowerCase();
+  
+        // Buscar checkbox que tenga ese nombre (ignorando mayúsculas/minúsculas)
+        document.querySelectorAll('input[name="productos"]').forEach(cb => {
+          const nombre = cb.dataset.nombre.trim().toLowerCase();
+          if (nombre === nombreProducto) {
+            cb.checked = false;
+            document.getElementById("cantidad_" + cb.value).value = 0;
+          }
+        });
+      }
+  
+      actualizarPedido(); // Refresca la lista del pedido y total
+    }
+  
+    // Asignar evento a la X del modal
+    document.querySelector("#stockModal .close").addEventListener("click", cerrarModalYLimpiarProductos);
+  </script>
+  
 </body>
 </html>
 {% endblock %}
