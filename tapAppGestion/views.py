@@ -120,6 +120,8 @@ def producto_detalle(request, producto_id):
 
 @login_required
 def editar_producto(request, producto_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Solo los administradores pueden editar productos.")
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES, instance=producto)
@@ -133,6 +135,8 @@ def editar_producto(request, producto_id):
 
 @login_required
 def eliminar_producto(request, producto_id):
+    if not request.user.is_superuser:
+        raise PermissionDenied("Solo los administradores pueden eliminar productos.")
     producto = get_object_or_404(Producto, id=producto_id)
     if request.method == 'POST':
         producto.delete()
