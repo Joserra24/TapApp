@@ -57,12 +57,19 @@
     <h2>Historial de Horarios</h2>
 
     <p style="text-align: center; font-size: 12px;">
-        Usuario: <strong>{{ usuario.username }}</strong><br>
+        {% if usuario == "Todos los usuarios" %}
+            Usuario: <strong>Todos los camareros</strong><br>
+        {% else %}
+            Usuario: <strong>{{ usuario.username }}</strong><br>
+        {% endif %}
         Fecha de generación: <strong>{{ fecha_generacion|date:"d/m/Y H:i" }}</strong>
     </p>
-
+    
     {% for grupo in registros_ordenados %}
     <h3 class="mes-titulo">{{ grupo.mes }}</h3>
+    
+    {% for usuario in grupo.usuarios %}
+    <h4 style="text-align: left;">Camarero: <strong>{{ usuario.nombre }}</strong></h4>
     <table>
         <thead>
             <tr>
@@ -72,19 +79,21 @@
             </tr>
         </thead>
         <tbody>
-            {% for r in grupo.registros %}
+            {% for r in usuario.registros %}
             <tr>
                 <td>{{ r.hora_entrada|date:"Y-m-d H:i" }}</td>
                 <td>{% if r.hora_salida %}{{ r.hora_salida|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td>
-                <td>{{ r.calcular_duracion|default:"-" }}</td>
+                <td>{{ r.duracion_calculada|default:"-" }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-    <p class="total-mes">Total {{ grupo.mes }}: {{ grupo.total_mes }}</p>
+    <p class="total-mes">Total {{ grupo.mes }} ({{ usuario.nombre }}): {{ usuario.total }}</p>
     {% endfor %}
-
+    
+    {% endfor %}
     <p class="total-global">Total acumulado: {{ total_duracion }}</p>
+    
 </body>
 
 </html>

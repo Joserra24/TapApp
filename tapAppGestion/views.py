@@ -738,17 +738,16 @@ def registrar_salida(request):
 
 @login_required
 def exportar_horarios_pdf(request):
-    registros = RegistroHorario.objects.filter(camarero=request.user).order_by('hora_entrada')
+    from collections import defaultdict
+    from datetime import timedelta
 
-    # Nombres de meses en español (indexados por mes)
-    nombres_meses_es = [
-        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
-    ]
+    if request.user.is_superuser:
+        registros = RegistroHorario.objects.all().order_by('hora_entrada')
+    else:
+        registros = RegistroHorario.objects.filter(camarero=request.user).order_by('hora_entrada')
 
-    # Agrupar por (año, mes)
-    registros_por_mes = defaultdict(list)
-    total_por_mes = defaultdict(int)
+    registros_por_mes = defaultdict(lambda: defaultdict(list))
+    total_por_mes = defaultdict(lambda: defaultdict(int))
     total_segundos = 0
 
     for r in registros:
@@ -758,40 +757,50 @@ def exportar_horarios_pdf(request):
             segundos = h * 3600 + m * 60 + s
             total_segundos += segundos
 
+            # Agrupamos por (año, mes) y camarero.username
             key = (r.hora_entrada.year, r.hora_entrada.month)
-            registros_por_mes[key].append(r)
-            total_por_mes[key] += segundos
+            nombre_usuario = r.camarero.username
+            r.duracion_calculada = duracion  # Añadimos atributo para usar en template
+            registros_por_mes[key][nombre_usuario].append(r)
+            total_por_mes[key][nombre_usuario] += segundos
 
     total_duracion = str(timedelta(seconds=total_segundos))
 
-    # Crear lista de grupos ordenados y traducidos
+    nombres_meses_es = [
+        "", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ]
+
     registros_ordenados = []
-    for (year, month) in sorted(registros_por_mes):
-        nombre_mes = f"{nombres_meses_es[month]} {year}"
-        registros_ordenados.append({
-            'mes': nombre_mes,
-            'registros': registros_por_mes[(year, month)],
-            'total_mes': str(timedelta(seconds=total_por_mes[(year, month)]))
-        })
+    for (year, month), usuarios in sorted(registros_por_mes.items()):
+        grupo = {
+            'mes': f"{nombres_meses_es[month]} {year}",
+            'usuarios': []
+        }
+        for username, registros_usuario in usuarios.items():
+            grupo['usuarios'].append({
+                'nombre': username,
+                'registros': registros_usuario,
+                'total': str(timedelta(seconds=total_por_mes[(year, month)][username]))
+            })
+        registros_ordenados.append(grupo)
 
     template = get_template('horarios_pdf.html')
     html = template.render({
         'registros_ordenados': registros_ordenados,
         'total_duracion': total_duracion,
-        'usuario': request.user,
+        'usuario': "Todos los usuarios" if request.user.is_superuser else request.user,
         'fecha_generacion': now()
-
     })
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="horarios.pdf"'
-
     pisa_status = pisa.CreatePDF(html, dest=response)
 
     if pisa_status.err:
         return HttpResponse('Error al generar el PDF')
     return response
-
+    
 @login_required
 def control_horarios(request):
     # Si el usuario es administrador, obtiene todos los registros;
