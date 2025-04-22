@@ -64,12 +64,6 @@
                 <p><strong>Fecha de cierre:</strong> {{ item.pedido.fecha_cierre|timezone:"Europe/Madrid"|date:"d/m/Y H:i" }}</p>
                 <p><strong>Mesa:</strong> {{ item.pedido.mesa }}</p>
                 <p><strong>Total:</strong> {{ item.total_pedido|floatformat:2 }}€</p>
-                <form action="{% url 'eliminar_pedido_cerrado' item.pedido.id %}" method="post"
-                    onsubmit="return confirm('¿Estás seguro de que quieres eliminar este pedido cerrado?');">
-                    {% csrf_token %}
-                    <button type="submit" class="eliminar-btn">Eliminar</button>
-                </form>
-
             </div>
         </a>
         {% empty %}
