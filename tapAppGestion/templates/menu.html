@@ -15,7 +15,9 @@
   <header>
     <h1>Menú</h1>
     <!-- Botón de agregar producto -->
+    {% if user.is_superuser %}
     <a href="{% url 'agregar_producto' %}" class="btn-agregar">Agregar Producto</a>
+    {% endif %}
   </header>
   <main>
     {% for categoria, productos in categorias.items %}
