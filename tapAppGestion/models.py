@@ -82,3 +82,17 @@ class RegistroHorario(models.Model):
 
     def __str__(self):
         return f"{self.camarero.username} - {self.hora_entrada} a {self.hora_salida}"
+
+class ProductoPagado(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    cantidad = models.PositiveIntegerField(default=1)
+    precio_unitario = models.DecimalField(max_digits=6, decimal_places=2)
+    fecha = models.DateField(default=now)
+    pedido = models.ForeignKey(Pedido, on_delete=models.SET_NULL, null=True, blank=True)
+    camarero = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def total(self):
+        return self.precio_unitario * self.cantidad
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} pagado el {self.fecha}"

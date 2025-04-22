@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import logout
 from django.contrib import messages  
 from django.contrib.auth.models import User
-from .models import Pedido, Producto, PedidoProducto
+from .models import Pedido, Producto, PedidoProducto, ProductoPagado
 from django.utils.timezone import now, localtime, timedelta
 from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from decimal import Decimal
@@ -1066,6 +1066,14 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
 
     # --------------------- Actualizamos la línea del pedido ---------------------
     # Se resta 1 unidad; si queda 0, se elimina la línea para quitar el producto de la lista.
+    ProductoPagado.objects.create(
+        producto=producto,
+        cantidad=1,
+        precio_unitario=producto.precio,
+        fecha=localtime(now()).date(),
+        pedido=producto_pedido.pedido,
+        camarero=request.user
+    )
     if producto_pedido.cantidad > 1:
         producto_pedido.cantidad -= 1
         producto_pedido.save()
@@ -1140,16 +1148,46 @@ def reporte(request):
             .order_by('producto__categoria', 'producto__nombre')
     )
 
+    # 🔄 3.1) Añadir productos pagados individualmente ese día
+    pagos_sueltos = ProductoPagado.objects.filter(fecha=fecha)
+
+    # Unificamos ambas fuentes en una lista común
+    from collections import defaultdict
+    reporte_por_categoria = defaultdict(list)
+    contador_productos = defaultdict(lambda: {'cantidad': 0, 'total': 0, 'precio': 0, 'nombre': '', 'categoria': ''})
+
+    # Añadir los productos de pedidos completos
+    for v in ventas:
+        key = (v['producto__nombre'], v['producto__categoria'])
+        contador_productos[key]['cantidad'] += v['cantidad']
+        contador_productos[key]['total'] += v['total']
+        contador_productos[key]['precio'] = float(v['producto__precio'])
+        contador_productos[key]['nombre'] = v['producto__nombre']
+        contador_productos[key]['categoria'] = v['producto__categoria']
+
+    # Añadir los productos pagados individualmente
+    for pago in pagos_sueltos:
+        key = (pago.producto.nombre, pago.producto.categoria)
+        contador_productos[key]['cantidad'] += pago.cantidad
+        contador_productos[key]['total'] += pago.total()
+        contador_productos[key]['precio'] = float(pago.precio_unitario)
+        contador_productos[key]['nombre'] = pago.producto.nombre
+        contador_productos[key]['categoria'] = pago.producto.categoria
+
     # 4) Agrupar para el template
     reporte_por_categoria = {}
-    for v in ventas:
-        cat = v['producto__categoria']
-        reporte_por_categoria.setdefault(cat, []).append({
-            'nombre':   v['producto__nombre'],
-            'precio':   v['producto__precio'],
-            'cantidad': v['cantidad'],
-            'total':    v['total'],
+    # Agrupar por categoría asegurando existencia y orden
+    for (nombre, categoria), val in sorted(contador_productos.items(), key=lambda x: (x[1]['categoria'], x[1]['nombre'])):
+        if categoria not in reporte_por_categoria:
+            reporte_por_categoria[categoria] = []
+
+        reporte_por_categoria[categoria].append({
+            'nombre':   nombre,
+            'precio':   val['precio'],
+            'cantidad': val['cantidad'],
+            'total':    val['total'],
         })
+
 
     # 5) Datos para la gráfica
     labels = list(reporte_por_categoria.keys())
@@ -1164,7 +1202,7 @@ def reporte(request):
     top_count = top['cantidad']          if top else 0
 
     # 7) **Total del día**: suma de todos los totales individuales
-    grand_total = sum(v['total'] for v in ventas) if ventas else 0
+    grand_total = sum(item['total'] for item in contador_productos.values())
 
     # 8) Datos por mes para gráfica de barras
     ventas_mensuales = (
