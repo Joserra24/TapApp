@@ -30,17 +30,22 @@
             <a href="{% url 'lista_pedidos' %}">
                 <button>Pedidos</button>
             </a>
+            {% if user.is_superuser %}
             <a href="{% url 'lista_pedidos_cerrados' %}">
                 <button>Cerrados</button>
-            </a>
-            <a href="{% url 'menu' %}">
-                <button>Menú</button>
             </a>
             <a href="{% url 'stock' %}">
                 <button>Stock</button>
             </a>
             <a href="{% url 'personal' %}">
-            <button>Personal</button>
+                <button>Personal</button>
+            </a>
+            <a href="{% url 'reporte' %}">
+                <button>Reporte</button>
+            </a>
+            {% endif %}
+            <a href="{% url 'menu' %}">
+                <button>Menú</button>
             </a>
             <a href="{% url 'profile' %}">
                 <button>Perfil</button>
@@ -48,9 +53,7 @@
             <a href="{% url 'control_horarios' %}">
                 <button>Fichar</button>
             </a>
-            <a href="{% url 'reporte' %}">
-                <button>Reporte</button>
-            </a>
+           
             <a href="{% url 'salir' %}">
                 <button class="logout-button">Cerrar sesión</button>
             </a>
