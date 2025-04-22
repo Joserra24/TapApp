@@ -16,6 +16,9 @@ from .models import RegistroHorario
 from collections import defaultdict
 from django.core.exceptions import PermissionDenied
 from django.utils import timezone
+from django.db.models.functions import TruncMonth
+from django.template.loader import render_to_string
+from io import BytesIO
 
 
 
@@ -1147,6 +1150,22 @@ def reporte(request):
     # 7) **Total del día**: suma de todos los totales individuales
     grand_total = sum(v['total'] for v in ventas) if ventas else 0
 
+    # 8) Datos por mes para gráfica de barras
+    ventas_mensuales = (
+        Pedido.objects.filter(pagado=True)
+        .annotate(mes=TruncMonth('fecha_cierre'))
+        .values('mes')
+        .annotate(total=Sum(F('pedidoproducto__producto__precio') * F('pedidoproducto__cantidad')))
+        .order_by('mes')
+    )
+
+    # Formatear datos para Chart.js
+    meses_es = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+    bar_labels = [meses_es[v['mes'].month - 1].capitalize() for v in ventas_mensuales]
+    bar_values = [float(v['total']) if v['total'] else 0 for v in ventas_mensuales]
+
     return render(request, 'reporte.html', {
         'fecha': fecha,
         'reporte_por_categoria': reporte_por_categoria,
@@ -1154,5 +1173,50 @@ def reporte(request):
         'values': values,
         'top_name': top_name,
         'top_count': top_count,
-        'grand_total': grand_total,  # <- ¡no lo olvides!
+        'grand_total': grand_total,
+        'bar_labels': bar_labels,
+        'bar_values': bar_values,
     })
+
+@login_required
+def reporte_pdf(request):
+    # Obtener pedidos pagados
+    pedidos = Pedido.objects.filter(pagado=True)
+
+    # Agrupar por día
+    ventas_por_dia = (
+        pedidos
+        .values('fecha_cierre__date')
+        .annotate(total=Sum(F('pedidoproducto__producto__precio') * F('pedidoproducto__cantidad')))
+        .order_by('fecha_cierre__date')
+    )
+
+    # Agrupar por mes
+    from django.db.models.functions import TruncMonth
+    ventas_por_mes = (
+        pedidos
+        .annotate(mes=TruncMonth('fecha_cierre'))
+        .values('mes')
+        .annotate(total=Sum(F('pedidoproducto__producto__precio') * F('pedidoproducto__cantidad')))
+        .order_by('mes')
+    )
+
+    total_ingresos = sum([v['total'] or Decimal("0") for v in ventas_por_mes])
+
+
+    # Renderizar HTML
+    html = render_to_string('reporte_pdf.html', {
+        'ventas_por_dia': ventas_por_dia,
+        'ventas_por_mes': ventas_por_mes,
+        'now':now(),
+        'total_ingresos': total_ingresos,
+    })
+
+    # Generar PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="reporte_ventas.pdf"'
+    pisa_status = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), dest=response)
+    
+    if pisa_status.err:
+        return HttpResponse('Hubo un error generando el PDF', status=500)
+    return response
