@@ -31,7 +31,7 @@ class Producto(models.Model):
     precio = models.DecimalField(max_digits=6, decimal_places=2)
     imagen = models.ImageField(upload_to='productos/', blank=True, null=True)
     cantidad = models.PositiveIntegerField(default=0)  # Campo para la cantidad en el almacén
-    es_barril = models.BooleanField(default=False)  # Nuevo campo
+    es_barril = models.BooleanField(default=False)
     litros_disponibles = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
     kilos_disponibles = models.DecimalField(max_digits=6, decimal_places=2, null=True, blank=True)
 
@@ -43,9 +43,9 @@ class Pedido(models.Model):
     mesa = models.CharField(max_length=50)  
     numero_clientes = models.PositiveIntegerField()
     productos = models.ManyToManyField(Producto, through='PedidoProducto')
-    camarero = models.ForeignKey(User, on_delete=models.CASCADE)  # Nuevo campo: camarero que toma el pedido
-    pagado = models.BooleanField(default=False)  # Nuevo campo
-    fecha = models.DateTimeField(default=now)  # Set default to current timestamp
+    camarero = models.ForeignKey(User, on_delete=models.CASCADE)  #camarero que toma el pedido
+    pagado = models.BooleanField(default=False)
+    fecha = models.DateTimeField(default=now)
     fecha_cierre = models.DateTimeField(null=True, blank=True)  # Fecha cuando se pagó
 
 

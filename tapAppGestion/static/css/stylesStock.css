@@ -14,8 +14,8 @@ h2 {
 .navbar {
     display: flex;
     justify-content: center;
-    flex-wrap: wrap; /* Permite que los elementos pasen a una nueva línea */
-    gap: 10px; /* Espaciado entre elementos */
+    flex-wrap: wrap;
+    gap: 10px;
     padding: 10px;
 }
 
@@ -24,7 +24,7 @@ h2 {
     padding: 0;
     display: flex;
     flex-wrap: wrap;
-    gap: 10px; /* Asegura que haya espacio entre los elementos */
+    gap: 10px;
     justify-content: center;
 }
 
@@ -40,7 +40,7 @@ h2 {
     border-radius: 5px;
     background-color: #fff;
     transition: background-color 0.3s ease;
-    white-space: nowrap; /* Evita el corte del texto */
+    white-space: nowrap;
     display: inline-block;
 }
 

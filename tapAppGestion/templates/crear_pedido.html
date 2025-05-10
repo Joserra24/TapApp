@@ -12,41 +12,31 @@
   <title>Crear Pedido</title>
   <link rel="stylesheet" type="text/css" href="{% static 'css/stylesCrearPedido.css' %}">
   <style>
-    /* Modal a pantalla completa con fondo semitransparente */
     .modal {
       display: none;
       position: fixed;
-      z-index: 9999; /* Asegura que esté por encima de todo */
+      z-index: 9999;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0,0,0,0.4); /* Fondo semitransparente */
+      background-color: rgba(0,0,0,0.4);
     }
-  
-    /* Contenido del modal centrado en la pantalla */
     .modal-content {
-      /* Ajusta la posición para centrarlo vertical y horizontalmente */
       position: absolute;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-  
-      /* Ajusta el tamaño y estilo del recuadro */
       width: 400px;
       max-width: 80%;
       padding: 20px;
       border-radius: 5px;
-  
-      /* Fondo y colores estilo "rojo clarito" */
-      background-color: #f8d7da; /* Rojo clarito */
-      color: #721c24;           /* Texto en tono más oscuro */
+      background-color: #f8d7da;
+      color: #721c24;
       border: 1px solid #f5c6cb;
       text-align: center;
     }
-  
-    /* Botón de cierre (la “x”) */
     .close {
       color: #721c24;
       float: right;
@@ -135,7 +125,6 @@
     </div>
   </main>
 
-  
   <!-- Modal para notificación de stock insuficiente -->
   <div id="stockModal" class="modal">
     <div class="modal-content">
