@@ -21,9 +21,9 @@
   }
 
   header h1 {
-    font-weight: bold; /* Aplica negrita */
-    font-size: 24px; /* Ajusta el tamaño */
-    color: black; /* Asegura que sea visible */
+    font-weight: bold;
+    font-size: 24px; 
+    color: black; 
   }
   
   /* Contenedor del icono de usuario + título */
@@ -38,14 +38,14 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background-color: #ffcd00; /* color dorado/amarillo */
+    background-color: #ffcd00;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
     font-size: 1.2rem;
     color: #333;
-    box-shadow: 0 0 0 2px #000 inset; /* Para simular borde negro estilo boceto */
+    box-shadow: 0 0 0 2px #000 inset;
   }
   
   /* Título a la derecha del icono */
@@ -61,8 +61,8 @@
   }
   
   nav button {
-    background-color: #8ae650; /* verde claro */
-    border: 2px solid #000;    /* borde negro estilo boceto */
+    background-color: #8ae650;
+    border: 2px solid #000;   
     color: #000;
     font-weight: bold;
     padding: 0.8em 1em;
@@ -74,17 +74,15 @@
     background-color: #a2f070;
   }
 
-    /* Estilo específico para el botón de cerrar sesión */
   .logout-button {
-    background-color: #ff4d4d; /* rojo claro */
-    margin-left: 5em; /* Separación adicional */
+    background-color: #ff4d4d; 
+    margin-left: 5em; 
   }
 
   nav .logout-button:hover {
-    background-color: #ff6666; /* rojo más claro */
+    background-color: #ff6666; 
   }
   
-  /* --- CONTENIDO PRINCIPAL --- */
   main {
     position: relative;
     padding: 2em;
@@ -96,7 +94,7 @@
   .main-image {
     max-width: 1000px;
     margin: 2em 0;
-    border: 2px solid #000; /* borde estilo boceto */
+    border: 2px solid #000; 
   }
   
   /* Botón flotante con el + en la esquina inferior derecha */
@@ -125,20 +123,15 @@
   .profile-box {
     margin-top: 2em;
     padding: 1em;
-    width: 300px;           /* Ajusta a tu gusto */
-    border: 2px solid #000; /* Borde negro estilo boceto */
+    width: 300px;
+    border: 2px solid #000;
     background-color: #fff; 
-    box-shadow: 2px 2px 0 0 #000; /* Efecto "boceto" en la caja */
+    box-shadow: 2px 2px 0 0 #000;
   }
   .profile-box p {
     margin-bottom: 1em;
   }
   
-  /* Pequeño ajuste para estilo "boceto" en general */
-  /* Opcional: fuente "Comic Sans" para simular un boceto más marcado */
-  /* body { font-family: "Comic Sans MS", sans-serif; } */
-
-  /* --- ESTILOS PARA EL FORMULARIO DE LOGIN --- */
   .login-form {
     display: flex;
     flex-direction: column;
@@ -159,8 +152,8 @@
   }
 
   .login-form button {
-    background-color: #8ae650; /* verde claro */
-    border: 2px solid #000;    /* borde negro estilo boceto */
+    background-color: #8ae650;
+    border: 2px solid #000;    
     color: #000;
     font-weight: bold;
     padding: 0.5em 1em;
@@ -218,7 +211,7 @@
 
   /* Contenedor del perfil */
   .profile-container {
-    background: rgba(0, 0, 0, 0.7); /* Fondo semi-transparente */
+    background: rgba(0, 0, 0, 0.7); 
     padding: 50px;
     border-radius: 25px;
     text-align: center;
@@ -232,9 +225,9 @@
   }
 
   .logo {
-    width: 80px; /* Ajusta el tamaño según necesites */
+    width: 80px;
     height: auto;
-    margin-right: 10px; /* Espacio entre el logo y el texto */
+    margin-right: 10px; 
   }
 
   .btn-lila {
@@ -261,8 +254,8 @@
   }
 
   .btn-red {
-    background-color: #d9534f; /* Rojo fuerte */
-    color: black; /* Texto blanco */
+    background-color: #d9534f;
+    color: black;
     border: none;
     font-weight: bold;
     padding: 12px 24px;
@@ -275,17 +268,17 @@
 }
 
   .btn-red:hover {
-      background-color: #c9302c; /* Rojo más oscuro al pasar el mouse */
+      background-color: #c9302c;
   }
 
   .profile-buttons {
-    display: flex;  /* Usa flexbox para alinear los elementos en fila */
-    gap: 10px;      /* Espacio entre los botones */
-    align-items: center; /* Alinea los botones verticalmente */
+    display: flex;
+    gap: 10px;  
+    align-items: center;
 }
 
   .delete-profile-button {
-      order: 1;  /* Hace que este botón aparezca primero */
+      order: 1;
   }
 
   .floating-btn {
@@ -312,7 +305,7 @@
   }
 
   .floating-btn:hover {
-      background-color: rgba(0, 0, 0, 0.8); /* Mantener el fondo negro con un poco de transparencia */
+      background-color: rgba(0, 0, 0, 0.8);
   }
 
   .floating-btn a:hover {

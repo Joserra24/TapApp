@@ -20,13 +20,8 @@ from django.db.models.functions import TruncMonth
 from django.template.loader import render_to_string
 from io import BytesIO
 
-
-
-
-
 import calendar
 import json
-
 
 from django.http import HttpResponse
 from .forms import ProductoForm, RegistroForm, EditProfileForm, PedidoForm, ActualizarStockForm, RegistroForm
@@ -83,7 +78,7 @@ def edit_profile(request):
             password_changed = bool(form.cleaned_data.get("password1"))
 
             if password_changed:
-                update_session_auth_hash(request, user)  # Mantiene la sesión activa
+                update_session_auth_hash(request, user)
                 messages.success(request, "Tu contraseña ha sido actualizada correctamente.")
             else:
                 messages.success(request, "Tu perfil ha sido actualizado correctamente.")
@@ -152,13 +147,12 @@ def lista_pedidos(request, pedido_id=None):
     for pedido in pedidos:
         productos_pedido = PedidoProducto.objects.filter(pedido=pedido).select_related('producto')
 
-            # Calcular el total del pedido sumando (precio * cantidad)
         total_pedido = sum(producto_pedido.producto.precio * producto_pedido.cantidad for producto_pedido in productos_pedido)
 
         pedidos_con_productos.append({
             'pedido': pedido,
             'productos': productos_pedido,
-            'total_pedido': round(total_pedido, 2)  # Redondear a 2 decimales
+            'total_pedido': round(total_pedido, 2) 
         })
 
     return render(request, 'lista_pedidos.html', {'pedidos_con_productos': pedidos_con_productos,  'pedido_reciente_id': pedido_id})
@@ -166,13 +160,12 @@ def lista_pedidos(request, pedido_id=None):
 
 @login_required
 def lista_pedidos_cerrados(request):
-    filtro = request.GET.get('filtro', 'recientes')  # Obtener filtro de la URL (por defecto: "recientes")
-    fecha_inicio = request.GET.get('fecha_inicio')  # Obtener fecha de inicio (si se usa filtro por fecha)
-    fecha_fin = request.GET.get('fecha_fin')  # Obtener fecha de fin (si se usa filtro por fecha)
+    filtro = request.GET.get('filtro', 'recientes')
+    fecha_inicio = request.GET.get('fecha_inicio')
+    fecha_fin = request.GET.get('fecha_fin') 
 
-    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')  # Pedidos pagados ordenados por fecha
+    pedidos = Pedido.objects.filter(pagado=True).order_by('-fecha_cierre')
 
-    # Filtrado según el criterio seleccionado
     if filtro == "ultima_semana":
         pedidos = pedidos.filter(fecha_cierre__gte=now() - timedelta(days=7))
     elif filtro == "ultimo_mes":
@@ -182,15 +175,14 @@ def lista_pedidos_cerrados(request):
     elif filtro == "por_fecha" and fecha_inicio and fecha_fin:
         pedidos = pedidos.filter(fecha_cierre__date__range=[fecha_inicio, fecha_fin])
     elif filtro == "por_mes":
-        mes = request.GET.get('mes')  # Mes en formato "YYYY-MM"
+        mes = request.GET.get('mes') 
         if mes:
             pedidos = pedidos.filter(fecha_cierre__year=mes.split('-')[0], fecha_cierre__month=mes.split('-')[1])
     elif filtro == "por_dia":
-        dia = request.GET.get('dia')  # Día en formato "YYYY-MM-DD"
+        dia = request.GET.get('dia')
         if dia:
             pedidos = pedidos.filter(fecha_cierre__date=dia)
 
-    # Convertir fecha de cierre a hora de Madrid
     pedidos_con_precio = []
     for pedido in pedidos:
         total_pedido = pedido.pedidoproducto_set.aggregate(total=Sum(F('producto__precio') * F('cantidad')))['total'] or 0
@@ -221,14 +213,10 @@ def detalle_pedido_cerrado(request, pedido_id):
     pedido = get_object_or_404(Pedido, id=pedido_id, pagado=True)
     productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
 
-    # Calcular el total correctamente: cantidad * precio
     total_pedido = productos_pedido.aggregate(total=Sum(F('cantidad') * F('producto__precio')))['total'] or 0
-    total_pedido = round(Decimal(total_pedido), 2)  # Redondear a 2 decimales
-
+    total_pedido = round(Decimal(total_pedido), 2) 
 
     pedido.fecha_cierre = localtime(pedido.fecha_cierre)
-
-    
 
     return render(request, 'detalles_pedido_cerrado.html', {
         'pedido': pedido,
@@ -242,7 +230,7 @@ def eliminar_pedido(request, pedido_id):
     
     if request.method == 'POST':
         pedido.delete()
-        return redirect('lista_pedidos')  # Redirige a la lista de pedidos después de eliminar
+        return redirect('lista_pedidos')
 
     return render(request, 'confirmacion_eliminar_pedido.html', {'pedido': pedido})
 
@@ -254,10 +242,9 @@ def editar_pedido(request, pedido_id):
         form = PedidoForm(request.POST, instance=pedido)
         if form.is_valid():
             pedido = form.save(commit=False)
-            pedido.camarero = request.user  # Mantener el camarero original
+            pedido.camarero = request.user 
             pedido.save()
 
-            # Obtener los productos del formulario
             productos = request.POST.getlist('productos')
             cantidades = json.loads(request.POST.get('cantidades', '{}'))
 
@@ -265,14 +252,11 @@ def editar_pedido(request, pedido_id):
                 producto = Producto.objects.get(id=producto_id)
                 cantidad = int(cantidades.get(str(producto.id), 1))
 
-                # Verificar si el producto ya está en el pedido
                 pedido_producto, creado = PedidoProducto.objects.get_or_create(pedido=pedido, producto=producto)
 
                 if creado:
-                    # Si es un nuevo producto, lo añadimos con la cantidad seleccionada
                     pedido_producto.cantidad = cantidad
                 else:
-                    # Si ya estaba en el pedido, sumamos la nueva cantidad
                     pedido_producto.cantidad += cantidad
 
                 pedido_producto.save()
@@ -282,19 +266,15 @@ def editar_pedido(request, pedido_id):
     else:
         form = PedidoForm(instance=pedido)
 
-    # Obtener los productos actuales del pedido
     productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
     productos_seleccionados = {str(pp.producto.id): pp.cantidad for pp in productos_pedido}
 
-    # Organizar productos en categorías
     productos = Producto.objects.all().order_by('categoria')
     categorias = {}
     for producto in productos:
-        # Cafés normales
         if producto.categoria == "Cafés" and producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
 
-        # Descafeinados
         elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
 
@@ -315,15 +295,12 @@ def eliminar_producto_pedido(request, pedido_id, producto_id):
     pedido = get_object_or_404(Pedido, id=pedido_id)
     producto = get_object_or_404(Producto, id=producto_id)
 
-    # Buscar si el producto está en el pedido
     pedido_producto = PedidoProducto.objects.filter(pedido=pedido, producto=producto).first()
 
     if pedido_producto:
-        # Si solo hay una unidad, eliminar el producto del pedido
         if pedido_producto.cantidad == 1:
             pedido_producto.delete()
         else:
-            # Si hay más de una unidad, reducir la cantidad
             pedido_producto.cantidad -= 1
             pedido_producto.save()
 
@@ -335,12 +312,11 @@ def crear_pedido(request):
         form = PedidoForm(request.POST)
         if form.is_valid():
             pedido = form.save(commit=False)
-            pedido.camarero = request.user  # Asignar el camarero automáticamente
+            pedido.camarero = request.user 
             pedido.save()
             
             productos = request.POST.getlist('productos')
             cantidades = json.loads(request.POST.get('cantidades', '{}'))
-
 
             for producto_id in productos:
                 producto = Producto.objects.get(id=producto_id)
@@ -360,11 +336,9 @@ def crear_pedido(request):
     productos = Producto.objects.all().order_by('categoria')
     categorias = {}
     for producto in productos:
-        # Cafés normales
         if producto.categoria == "Cafés" and producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
 
-        # Descafeinados
         elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
 
@@ -379,7 +353,6 @@ def stock(request):
 
     categoria_seleccionada = request.GET.get('categoria', None)
 
-    # Grupos de productos que comparten barril
     barril_grupo_1 = ["Cerveza Con", "Tubo Con", "Cortada", "Cañón"]
     barril_grupo_2 = ["Cerveza Sin", "Tubo Sin"]
     BOCADILLOS_GRUPO = ["Serranito", "Montado de Lomo"]
@@ -407,9 +380,9 @@ def stock(request):
                         p.save()
 
                 except ValueError:
-                    pass  # Valor no numérico, ignoramos
+                    pass 
         
-        # 2) NUEVO: si la categoría es “Carnes Ibéricas” o “Pescados”, manejamos kilos
+        # 2)si la categoría es “Carnes Ibéricas” o “Pescados”, manejamos kilos
         elif producto.categoria in ["Carnes Ibéricas", "Pescados"]:
             kilos = request.POST.get('kilos_disponibles', None)
             if kilos is not None:
@@ -426,7 +399,6 @@ def stock(request):
             if kilos is not None:
                 try:
                     kilos_float = float(kilos)
-                    # Actualizar TODOS los productos en la lista BOCADILLOS_GRUPO
                     relacionados = Producto.objects.filter(
                         categoria="Bocadillos",
                         nombre__in=BOCADILLOS_GRUPO
@@ -586,7 +558,7 @@ def pagar_pedido(request, pedido_id):
             producto = item.producto
             cantidad = item.cantidad
 
-            # 🔻 Descuento por litros (cervezas y radler)
+            #Descuento por litros (cervezas y radler)
             if producto.nombre in conversion_litros:
                 litros_por_unidad = Decimal(str(conversion_litros[producto.nombre]))
                 litros_a_restar = litros_por_unidad * cantidad
@@ -608,14 +580,14 @@ def pagar_pedido(request, pedido_id):
                         p.litros_disponibles = nuevo_valor
                         p.save()
 
-            # 🍷 Descuento por copa de vino → resta litros en botella
+            #Descuento por copa de vino → resta litros en botella
             elif producto.nombre in vinos:
                 litros_actuales = producto.litros_disponibles or Decimal("0")
                 total_a_restar = Decimal("0.15") * cantidad
                 producto.litros_disponibles = max(litros_actuales - total_a_restar, Decimal("0"))
                 producto.save()
 
-            # 🍾 Descuento por unidad al vender botella
+            #Descuento por unidad al vender botella
             elif producto.nombre.startswith("Botella "):
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
                 producto.save()
@@ -633,7 +605,7 @@ def pagar_pedido(request, pedido_id):
                 total_a_restar = Decimal("0.3") * cantidad
                 total_ensaladas += total_a_restar
 
-             # 6) CROQUETAS => descuenta 10 unidades por 1 croqueta
+             # 6) CROQUETAS => descuenta 10 unidades por 1 ración de croquetas
             elif producto.nombre in croquetas_descuento:
                 units_current = producto.cantidad
                 # si vendes X croquetas => descuenta X*10
@@ -678,33 +650,28 @@ def pagar_pedido(request, pedido_id):
                     p.save()
 
 
-            # 🧊 Otros productos normales (por unidad)
+            #Otros productos normales (por unidad)
             elif not producto.es_barril:
                 producto.cantidad = max(producto.cantidad - cantidad, 0)
                 producto.save()
 
-         # 3) Ahora, tras el bucle, aplicamos la resta acumulada a todo el grupo BOCADILLOS_GRUPO
         if total_bocadillos > 0:
-            # Tomamos como referencia uno de ellos (por ejemplo, Serranito) para leer su stock actual
             bocadillo_ref = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO).first()
             if bocadillo_ref:
                 kilos_actuales = bocadillo_ref.kilos_disponibles or Decimal("0")
                 nuevo_valor = max(kilos_actuales - total_bocadillos, Decimal("0"))
 
-                # Asignamos ese nuevo valor a todos los productos del grupo
                 grupo_bocadillos = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO)
                 for p in grupo_bocadillos:
                     p.kilos_disponibles = nuevo_valor
                     p.save()
 
         if total_ensaladas > 0:
-            # Tomamos un producto de referencia (p.ej. "Ensalada Atún") para leer su stock actual
             ensalada_ref = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO).first()
             if ensalada_ref:
                 kilos_actuales = ensalada_ref.kilos_disponibles or Decimal("0")
                 nuevo_valor = max(kilos_actuales - total_ensaladas, Decimal("0"))
 
-                # Asignar este valor a todos los del grupo
                 grupo_ensaladas = Producto.objects.filter(nombre__in=ENSALADAS_GRUPO)
                 for p in grupo_ensaladas:
                     p.kilos_disponibles = nuevo_valor
@@ -714,10 +681,8 @@ def pagar_pedido(request, pedido_id):
 
 
 def registrar_entrada(request):
-    # Cerrar cualquier registro activo antes de iniciar uno nuevo
     RegistroHorario.objects.filter(camarero=request.user, activo=True).update(activo=False, hora_salida=now())
 
-    # Crear un nuevo registro con hora de entrada actual
     RegistroHorario.objects.create(camarero=request.user)
     
     messages.success(request, "Hora de entrada registrada. Cronómetro iniciado.")
@@ -728,7 +693,7 @@ def registrar_salida(request):
     registro = RegistroHorario.objects.filter(camarero=request.user, activo=True).first()
     if registro:
         registro.hora_salida = now()
-        registro.activo = False  # Marcar el turno como finalizado
+        registro.activo = False
         registro.save()
         messages.success(request, "Hora de salida registrada. Cronómetro reiniciado.")
     else:
@@ -757,10 +722,9 @@ def exportar_horarios_pdf(request):
             segundos = h * 3600 + m * 60 + s
             total_segundos += segundos
 
-            # Agrupamos por (año, mes) y camarero.username
             key = (r.hora_entrada.year, r.hora_entrada.month)
             nombre_usuario = r.camarero.username
-            r.duracion_calculada = duracion  # Añadimos atributo para usar en template
+            r.duracion_calculada = duracion
             registros_por_mes[key][nombre_usuario].append(r)
             total_por_mes[key][nombre_usuario] += segundos
 
@@ -803,11 +767,8 @@ def exportar_horarios_pdf(request):
     
 @login_required
 def control_horarios(request):
-    # Si el usuario es administrador, obtiene todos los registros;
-    # en ese caso se permite filtrar por camarero mediante el parámetro GET "camarero".
     if request.user.is_superuser:
         registros = RegistroHorario.objects.all()
-        # Obtener el filtro de camarero enviado en el GET (si existe)
         selected_camarero = request.GET.get('camarero', '')
         if selected_camarero:
             registros = registros.filter(camarero__id=selected_camarero)
@@ -833,8 +794,6 @@ def control_horarios(request):
     except RegistroHorario.DoesNotExist:
         registro_activo = None
 
-    # Para el filtro por camarero, obtenemos la lista de camareros que tengan al menos un registro.
-    # Esto se realiza solo para administradores.
     if request.user.is_superuser:
         camareros = User.objects.filter(registrohorario__isnull=False).distinct()
     else:
@@ -866,7 +825,6 @@ def generar_ticket_pdf(request, pedido_id):
     pedido = Pedido.objects.get(id=pedido_id)
     productos_pedido = PedidoProducto.objects.filter(pedido=pedido)
 
-    # Categorías que NO deben aparecer en el ticket de cocina
     categorias_excluidas = [
         "Cervezas", "Bebida/Refresco", "Copa Vino", "Botellas Vino", "Bebidas Alcohólicas", "Desayunos"
     ]
@@ -919,12 +877,10 @@ def generar_ticket_cliente(request, pedido_id):
 
 @login_required
 def pagar_producto(request, pedido_id, producto_pedido_id):
-    # Obtenemos la línea del pedido
     producto_pedido = get_object_or_404(PedidoProducto, id=producto_pedido_id, pedido_id=pedido_id)
     producto = producto_pedido.producto
-    cantidad_a_pagar = 1  # Solo se procesa 1 unidad
+    cantidad_a_pagar = 1 
 
-    # --------------------- Lógica de actualización del stock ---------------------
     conversion_litros = {
         "Cerveza Con": 0.2,
         "Tubo Con": 0.25,
@@ -945,8 +901,8 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
     RESTA_KILOS = Decimal("0.3")
 
     bocadillos_descuento = {
-        "Serranito": Decimal("0.2"),       # 200 g
-        "Montado de Lomo": Decimal("0.1"),  # 100 g
+        "Serranito": Decimal("0.2"),
+        "Montado de Lomo": Decimal("0.1"),
     }
     BOCADILLOS_GRUPO = ["Serranito", "Montado de Lomo"]
     total_bocadillos = Decimal("0")
@@ -999,7 +955,6 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
     elif producto.nombre in ENSALADAS_GRUPO:
         deduction = Decimal("0.3") * cantidad_a_pagar
         total_ensaladas += deduction
-        # Se actualizará el grupo después del bucle
 
     elif producto.nombre in croquetas_descuento:
         deduction_units = croquetas_descuento[producto.nombre] * cantidad_a_pagar
@@ -1016,7 +971,6 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
         deduction = bocadillos_descuento[producto.nombre] * cantidad_a_pagar
         total_bocadillos += deduction
 
-        # 7) Descuento para “Cafés” → 8 g (0.008 kg) por unidad vendida (grupo común)
     elif producto.nombre in ["Café Leche", "Café Solo", "Café Cortado"]:
         RESTA_CAFE = Decimal("0.008")
         kilos_actuales = producto.kilos_disponibles or Decimal("0")
@@ -1028,7 +982,6 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
             p.kilos_disponibles = nuevo_valor
             p.save()
 
-    # 8) Descuento para “Descafeinados” → 8 g (0.008 kg) por unidad vendida (grupo común)
     elif producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
         RESTA_DESCAFEINADO = Decimal("0.008")
         kilos_actuales = producto.kilos_disponibles or Decimal("0")
@@ -1040,13 +993,10 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
             p.kilos_disponibles = nuevo_valor
             p.save()
 
-
-
     elif not producto.es_barril:
         producto.cantidad = max(producto.cantidad - cantidad_a_pagar, 0)
         producto.save()
 
-    # Aplicar acumulaciones para grupos:
     if total_bocadillos > 0:
         bocadillo_ref = Producto.objects.filter(nombre__in=BOCADILLOS_GRUPO).first()
         if bocadillo_ref:
@@ -1067,8 +1017,6 @@ def pagar_producto(request, pedido_id, producto_pedido_id):
                 p.kilos_disponibles = nuevo_valor
                 p.save()
 
-    # --------------------- Actualizamos la línea del pedido ---------------------
-    # Se resta 1 unidad; si queda 0, se elimina la línea para quitar el producto de la lista.
     ProductoPagado.objects.create(
         producto=producto,
         cantidad=1,
@@ -1091,9 +1039,8 @@ def pausar_jornada(request):
     try:
         registro = RegistroHorario.objects.get(camarero=request.user, activo=True)
         now = timezone.now()
-        # Calcular el tiempo transcurrido como timedelta
         elapsed = now - registro.hora_entrada
-        registro.tiempo_transcurrido = elapsed  # Asigna el timedelta directamente
+        registro.tiempo_transcurrido = elapsed
         registro.pausado = True
         registro.save()
         messages.success(request, "Jornada pausada correctamente.")
@@ -1106,12 +1053,9 @@ def reanudar_jornada(request):
     try:
         registro = RegistroHorario.objects.get(camarero=request.user, activo=True, pausado=True)
         now = timezone.now()
-        # Recuperar el tiempo acumulado como timedelta
         paused_duration = registro.tiempo_transcurrido
-        # Ajustamos la hora de entrada para que, al calcular la diferencia, se incluya el tiempo ya acumulado
         registro.hora_entrada = now - paused_duration
         registro.pausado = False
-        # Reiniciamos el tiempo acumulado para futuras pausas
         registro.tiempo_transcurrido = timedelta(0)
         registro.save()
         messages.success(request, "Jornada reanudada correctamente.")
@@ -1121,7 +1065,6 @@ def reanudar_jornada(request):
 
 @login_required
 def reporte(request):
-    # 1) Fecha seleccionada o hoy
     fecha_str = request.GET.get('fecha')
     if fecha_str:
         try:
@@ -1131,10 +1074,8 @@ def reporte(request):
     else:
         fecha = localtime(now()).date()
 
-    # 2) Pedidos pagados esa fecha
     pedidos = Pedido.objects.filter(pagado=True, fecha_cierre__date=fecha)
 
-    # 3) Anotar cantidad y precio unitario, luego total por producto
     ventas = (
         PedidoProducto.objects
             .filter(pedido__in=pedidos)
@@ -1151,15 +1092,12 @@ def reporte(request):
             .order_by('producto__categoria', 'producto__nombre')
     )
 
-    # 🔄 3.1) Añadir productos pagados individualmente ese día
     pagos_sueltos = ProductoPagado.objects.filter(fecha=fecha)
 
-    # Unificamos ambas fuentes en una lista común
     from collections import defaultdict
     reporte_por_categoria = defaultdict(list)
     contador_productos = defaultdict(lambda: {'cantidad': 0, 'total': 0, 'precio': 0, 'nombre': '', 'categoria': ''})
 
-    # Añadir los productos de pedidos completos
     for v in ventas:
         key = (v['producto__nombre'], v['producto__categoria'])
         contador_productos[key]['cantidad'] += v['cantidad']
@@ -1168,7 +1106,6 @@ def reporte(request):
         contador_productos[key]['nombre'] = v['producto__nombre']
         contador_productos[key]['categoria'] = v['producto__categoria']
 
-    # Añadir los productos pagados individualmente
     for pago in pagos_sueltos:
         key = (pago.producto.nombre, pago.producto.categoria)
         contador_productos[key]['cantidad'] += pago.cantidad
@@ -1177,9 +1114,7 @@ def reporte(request):
         contador_productos[key]['nombre'] = pago.producto.nombre
         contador_productos[key]['categoria'] = pago.producto.categoria
 
-    # 4) Agrupar para el template
     reporte_por_categoria = {}
-    # Agrupar por categoría asegurando existencia y orden
     for (nombre, categoria), val in sorted(contador_productos.items(), key=lambda x: (x[1]['categoria'], x[1]['nombre'])):
         if categoria not in reporte_por_categoria:
             reporte_por_categoria[categoria] = []
@@ -1191,23 +1126,18 @@ def reporte(request):
             'total':    val['total'],
         })
 
-
-    # 5) Datos para la gráfica
     labels = list(reporte_por_categoria.keys())
     values = [
         sum(prod['cantidad'] for prod in items)
         for items in reporte_por_categoria.values()
     ]
 
-    # 6) Producto estrella
     top = max(ventas, key=lambda x: x['cantidad'], default=None)
     top_name  = top['producto__nombre'] if top else None
     top_count = top['cantidad']          if top else 0
 
-    # 7) **Total del día**: suma de todos los totales individuales
     grand_total = sum(item['total'] for item in contador_productos.values())
 
-    # 8) Datos por mes para gráfica de barras
     ventas_mensuales = (
         Pedido.objects.filter(pagado=True)
         .annotate(mes=TruncMonth('fecha_cierre'))
@@ -1216,7 +1146,6 @@ def reporte(request):
         .order_by('mes')
     )
 
-    # Formatear datos para Chart.js
     meses_es = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 
                 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
@@ -1237,10 +1166,8 @@ def reporte(request):
 
 @login_required
 def reporte_pdf(request):
-    # Obtener pedidos pagados
     pedidos = Pedido.objects.filter(pagado=True)
 
-    # Agrupar por día
     ventas_por_dia = (
         pedidos
         .values('fecha_cierre__date')
@@ -1248,7 +1175,6 @@ def reporte_pdf(request):
         .order_by('fecha_cierre__date')
     )
 
-    # Agrupar por mes
     from django.db.models.functions import TruncMonth
     ventas_por_mes = (
         pedidos
@@ -1260,8 +1186,6 @@ def reporte_pdf(request):
 
     total_ingresos = sum([v['total'] or Decimal("0") for v in ventas_por_mes])
 
-
-    # Renderizar HTML
     html = render_to_string('reporte_pdf.html', {
         'ventas_por_dia': ventas_por_dia,
         'ventas_por_mes': ventas_por_mes,
@@ -1269,7 +1193,6 @@ def reporte_pdf(request):
         'total_ingresos': total_ingresos,
     })
 
-    # Generar PDF
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="reporte_ventas.pdf"'
     pisa_status = pisa.CreatePDF(BytesIO(html.encode("UTF-8")), dest=response)

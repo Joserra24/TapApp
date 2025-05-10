@@ -20,8 +20,6 @@ from tapAppGestion import views
 from django.urls import reverse_lazy
 from django.contrib.auth.views import LogoutView
 
-
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index, name='index'),
@@ -37,12 +35,6 @@ urlpatterns = [
     path('pedido/<int:pedido_id>/producto/<int:producto_pedido_id>/nota/', views.actualizar_nota_producto, name='actualizar_nota_producto'),
     path('pedidos/confirmado/<int:pedido_id>/', views.lista_pedidos, name='lista_pedidos_confirmado'),
     path('pagar_producto/<int:pedido_id>/<int:producto_pedido_id>/', views.pagar_producto, name='pagar_producto'),
-
-
-
-
-
-
     path("profile/", views.profile_view, name="profile"),
     path("register/", views.formulario_registro, name="register"),
     path("logout/", LogoutView.as_view(next_page=reverse_lazy("register")), name="logout"),
@@ -67,13 +59,6 @@ urlpatterns = [
     path('reanudar_jornada/', views.reanudar_jornada, name='reanudar_jornada'),
     path('reporte/', views.reporte, name='reporte'),
     path('reporte/pdf/', views.reporte_pdf, name='reporte_pdf'),
-
-
-
-
-
-
-
 ]
 
 LOGIN_REDIRECT_URL = reverse_lazy("profile")
