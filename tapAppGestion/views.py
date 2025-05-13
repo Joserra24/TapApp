@@ -291,6 +291,9 @@ def editar_pedido(request, pedido_id):
             litros_por_unidad = conversion_litros.get(producto.nombre, Decimal("0.2"))
             producto.cantidad = int((producto.litros_disponibles or 0) / litros_por_unidad)
 
+        elif producto.categoria == "Copa Vino":
+            producto.cantidad = int((producto.litros_disponibles or 0) / Decimal("0.15"))
+
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
         categorias[producto.categoria].append(producto)
@@ -367,6 +370,9 @@ def crear_pedido(request):
             }
             litros_por_unidad = conversion_litros.get(producto.nombre, Decimal("0.2"))
             producto.cantidad = int((producto.litros_disponibles or 0) / litros_por_unidad)
+
+        elif producto.categoria == "Copa Vino":
+            producto.cantidad = int((producto.litros_disponibles or 0) / Decimal("0.15"))
 
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
