@@ -278,6 +278,19 @@ def editar_pedido(request, pedido_id):
         elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
 
+        elif producto.es_barril and producto.nombre in ["Cerveza Con", "Tubo Con", "Cortada", "Cañón", "Cerveza Sin", "Tubo Sin", "Radler"]:
+            conversion_litros = {
+                "Cerveza Con": Decimal("0.2"),
+                "Tubo Con": Decimal("0.25"),
+                "Cortada": Decimal("0.275"),
+                "Cañón": Decimal("0.350"),
+                "Cerveza Sin": Decimal("0.2"),
+                "Tubo Sin": Decimal("0.25"),
+                "Radler": Decimal("0.2"),
+            }
+            litros_por_unidad = conversion_litros.get(producto.nombre, Decimal("0.2"))
+            producto.cantidad = int((producto.litros_disponibles or 0) / litros_por_unidad)
+
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
         categorias[producto.categoria].append(producto)
@@ -341,6 +354,19 @@ def crear_pedido(request):
 
         elif producto.categoria == "Cafés" and producto.nombre in ["Desca Leche", "Desca Cortado", "Desca Solo"]:
             producto.cantidad = int((producto.kilos_disponibles or 0) / Decimal("0.008"))
+
+        elif producto.es_barril and producto.nombre in ["Cerveza Con", "Tubo Con", "Cortada", "Cañón", "Cerveza Sin", "Tubo Sin", "Radler"]:
+            conversion_litros = {
+                "Cerveza Con": Decimal("0.2"),
+                "Tubo Con": Decimal("0.25"),
+                "Cortada": Decimal("0.275"),
+                "Cañón": Decimal("0.350"),
+                "Cerveza Sin": Decimal("0.2"),
+                "Tubo Sin": Decimal("0.25"),
+                "Radler": Decimal("0.2"),
+            }
+            litros_por_unidad = conversion_litros.get(producto.nombre, Decimal("0.2"))
+            producto.cantidad = int((producto.litros_disponibles or 0) / litros_por_unidad)
 
         if producto.categoria not in categorias:
             categorias[producto.categoria] = []
